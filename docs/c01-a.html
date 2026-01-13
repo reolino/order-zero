@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-01-A 와이어프레임 - 매장 상세</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .device-frame {
+            width: 375px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #e5e5e5;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .share-btn {
+            background: none;
+            border: 1px solid #d1d5db;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* Hero Image */
+        .hero-image {
+            width: 100%;
+            height: 200px;
+            background: #e5e5e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* Store Info */
+        .store-info {
+            padding: 20px 16px;
+        }
+
+        .store-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #dcfce7;
+            color: #166534;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+        }
+
+        .hours {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .address {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .detail-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: #3b82f6;
+            font-size: 14px;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        /* Popular Menu Section */
+        .menu-section {
+            padding: 20px 0;
+            background: #fafafa;
+        }
+
+        .menu-section-title {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 0 16px;
+            margin-bottom: 16px;
+        }
+
+        .menu-scroll {
+            display: flex;
+            gap: 12px;
+            padding: 0 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .menu-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .menu-card {
+            flex-shrink: 0;
+            width: 120px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e5e5e5;
+        }
+
+        .menu-image {
+            width: 120px;
+            height: 120px;
+            background: #e5e5e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .menu-info {
+            padding: 12px;
+        }
+
+        .menu-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #1f2937;
+        }
+
+        .menu-price {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .view-all {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 16px;
+            color: #3b82f6;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        /* Spacer */
+        .spacer {
+            height: 100px;
+        }
+
+        /* Sticky Footer */
+        .sticky-footer {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 375px;
+            background: white;
+            padding: 16px;
+            border-top: 1px solid #e5e5e5;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+        }
+
+        .ghost-btn {
+            flex: 1;
+            padding: 14px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .primary-btn {
+            flex: 2;
+            padding: 14px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        @media (max-width: 420px) {
+            body {
+                padding: 0;
+            }
+            .device-frame {
+                border-radius: 0;
+                width: 100%;
+            }
+            .sticky-footer {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="device-frame">
+        <!-- Header -->
+        <div class="header">
+            <button class="share-btn">공유</button>
+        </div>
+
+        <!-- Hero Image -->
+        <div class="hero-image">
+            Hero Image
+        </div>
+
+        <!-- Store Info -->
+        <div class="store-info">
+            <h1 class="store-name">카페 블루보틀</h1>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                영업중
+            </div>
+            <div class="hours">오늘 09:00 - 22:00</div>
+            <div class="address">
+                📍 서울시 강남구 테헤란로 123
+            </div>
+            <button class="detail-btn">ℹ️ 상세정보</button>
+        </div>
+
+        <!-- Popular Menu Section -->
+        <div class="menu-section">
+            <h2 class="menu-section-title">인기 메뉴</h2>
+            <div class="menu-scroll">
+                <div class="menu-card">
+                    <div class="menu-image">메뉴1</div>
+                    <div class="menu-info">
+                        <div class="menu-name">아메리카노</div>
+                        <div class="menu-price">4,500원</div>
+                    </div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-image">메뉴2</div>
+                    <div class="menu-info">
+                        <div class="menu-name">카푸치노</div>
+                        <div class="menu-price">5,000원</div>
+                    </div>
+                </div>
+                <div class="menu-card">
+                    <div class="menu-image">메뉴3</div>
+                    <div class="menu-info">
+                        <div class="menu-name">라떼</div>
+                        <div class="menu-price">5,500원</div>
+                    </div>
+                </div>
+            </div>
+            <a href="#" class="view-all">전체 메뉴 보기 →</a>
+        </div>
+
+        <!-- Spacer for footer -->
+        <div class="spacer"></div>
+
+        <!-- Sticky Footer -->
+        <div class="sticky-footer">
+            <button class="ghost-btn">
+                📦 주문 조회
+            </button>
+            <button class="primary-btn">
+                주문하기 →
+            </button>
+        </div>
+    </div>
+</body>
+</html>
