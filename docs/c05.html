@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-05: 메뉴 상세 - Order Zero</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .wireframe {
+            width: 375px;
+            background: white;
+            border: 2px solid #333;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Header */
+        .header {
+            height: 56px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-btn {
+            width: 24px;
+            height: 24px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .header-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 2px;
+            background: #666;
+        }
+
+        .back-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 6px;
+            transform: translateY(-50%) rotate(45deg);
+            width: 8px;
+            height: 8px;
+            border-left: 2px solid #666;
+            border-bottom: 2px solid #666;
+        }
+
+        .back-btn::before {
+            display: none;
+        }
+
+        .share-btn::before {
+            display: none;
+        }
+
+        .share-btn::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Hero Image */
+        .hero-image {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .hero-image::before {
+            content: 'Menu Image';
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* Content */
+        .content {
+            padding: 20px 16px 100px;
+        }
+
+        /* Menu Info */
+        .menu-info {
+            margin-bottom: 24px;
+        }
+
+        .menu-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            background: #ff6b35;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+
+        .menu-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            flex: 1;
+        }
+
+        .menu-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .menu-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .required {
+            color: #ff6b35;
+            font-size: 13px;
+            margin-left: 4px;
+        }
+
+        /* Size Selection */
+        .size-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .size-option {
+            flex: 1;
+            height: 48px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .size-option.selected {
+            border-color: #333;
+            background: #f5f5f5;
+        }
+
+        .size-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .size-price {
+            font-size: 11px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        /* Temperature Selection */
+        .temp-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .temp-option {
+            flex: 1;
+            height: 48px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .temp-option.selected {
+            border-color: #333;
+            background: #f5f5f5;
+        }
+
+        /* Extra Options */
+        .extra-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .extra-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .option-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .checkbox.checked {
+            background: #333;
+            border-color: #333;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+        }
+
+        .option-name {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .option-price {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        /* Quantity Selector */
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .quantity-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .qty-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 24px 0;
+        }
+
+        /* Bottom Bar */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 375px;
+            height: 72px;
+            background: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+        }
+
+        .total-price {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .total-label {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .total-amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .add-cart-btn {
+            height: 48px;
+            padding: 0 20px;
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .add-cart-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .instant-pay-btn {
+            height: 48px;
+            padding: 0 24px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .instant-pay-btn:hover {
+            background: #555;
+        }
+
+        /* Screen Label */
+        .screen-label {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe">
+        <div class="screen-label">C-05: 메뉴 상세 (375×812px)</div>
+        
+        <!-- Header -->
+        <div class="header">
+            <div class="header-btn back-btn"></div>
+            <div class="header-title">아메리카노</div>
+            <div class="header-btn share-btn"></div>
+        </div>
+
+        <!-- Hero Image -->
+        <div class="hero-image"></div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Menu Info -->
+            <div class="menu-info">
+                <div class="menu-header">
+                    <span class="badge">인기</span>
+                    <h1 class="menu-name">아메리카노</h1>
+                </div>
+                <p class="menu-desc">
+                    에스프레소에 뜨거운 물을 더해 깔끔하고 진한 커피 본연의 맛과 향을 즐길 수 있는 커피
+                </p>
+                <div class="menu-price">4,500원</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Size Selection -->
+            <div class="section">
+                <div class="section-title">
+                    사이즈<span class="required">(필수)</span>
+                </div>
+                <div class="size-options">
+                    <div class="size-option">
+                        <span class="size-label">S</span>
+                        <span class="size-price">기본</span>
+                    </div>
+                    <div class="size-option selected">
+                        <span class="size-label">M</span>
+                        <span class="size-price">+500원</span>
+                    </div>
+                    <div class="size-option">
+                        <span class="size-label">L</span>
+                        <span class="size-price">+1,000원</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temperature Selection -->
+            <div class="section">
+                <div class="section-title">
+                    온도<span class="required">(필수)</span>
+                </div>
+                <div class="temp-options">
+                    <div class="temp-option selected">HOT</div>
+                    <div class="temp-option">ICED</div>
+                </div>
+            </div>
+
+            <!-- Extra Options -->
+            <div class="section">
+                <div class="section-title">추가 옵션</div>
+                <div class="extra-options">
+                    <div class="extra-option">
+                        <div class="option-left">
+                            <div class="checkbox checked"></div>
+                            <span class="option-name">샷 추가</span>
+                        </div>
+                        <span class="option-price">+500원</span>
+                    </div>
+                    <div class="extra-option">
+                        <div class="option-left">
+                            <div class="checkbox"></div>
+                            <span class="option-name">시럽 추가</span>
+                        </div>
+                        <span class="option-price">+300원</span>
+                    </div>
+                    <div class="extra-option">
+                        <div class="option-left">
+                            <div class="checkbox"></div>
+                            <span class="option-name">휘핑크림</span>
+                        </div>
+                        <span class="option-price">+500원</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div class="section">
+                <div class="quantity-selector">
+                    <span class="quantity-label">수량</span>
+                    <div class="quantity-controls">
+                        <div class="qty-btn">−</div>
+                        <span class="qty-value">1</span>
+                        <div class="qty-btn">+</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="bottom-bar">
+            <div class="total-price">
+                <span class="total-label">총 금액</span>
+                <span class="total-amount">5,500원</span>
+            </div>
+            <div class="button-group">
+                <button class="add-cart-btn">장바구니</button>
+                <button class="instant-pay-btn">즉시결제</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

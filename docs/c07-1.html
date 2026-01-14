@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-07-1: 연락처 및 알림 설정 - Order Zero</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .wireframe {
+            width: 375px;
+            background: white;
+            border: 2px solid #333;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header */
+        .header {
+            height: 56px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-btn {
+            width: 24px;
+            height: 24px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .back-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 6px;
+            transform: translateY(-50%) rotate(45deg);
+            width: 8px;
+            height: 8px;
+            border-left: 2px solid #666;
+            border-bottom: 2px solid #666;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .header-spacer {
+            width: 24px;
+        }
+
+        /* Content */
+        .content {
+            padding: 24px 16px;
+            padding-bottom: 100px;
+            min-height: 500px;
+        }
+
+        /* Guide Message */
+        .guide-section {
+            margin-bottom: 32px;
+        }
+
+        .guide-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .guide-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* Phone Input */
+        .input-section {
+            margin-bottom: 40px;
+        }
+
+        .section-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .phone-input {
+            width: 100%;
+            height: 56px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 0 16px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .phone-input:focus {
+            border-color: #333;
+        }
+
+        .phone-input::placeholder {
+            color: #bbb;
+        }
+
+        .input-helper {
+            font-size: 13px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        /* Notification Method */
+        .notification-section {
+            margin-bottom: 32px;
+        }
+
+        .notification-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .notification-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .notification-option {
+            height: 56px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .notification-option:hover {
+            border-color: #bbb;
+        }
+
+        .notification-option.selected {
+            border-color: #333;
+            background: #f9f9f9;
+        }
+
+        .option-icon {
+            width: 24px;
+            height: 24px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .notification-option.selected .option-icon {
+            background: #333;
+            position: relative;
+        }
+
+        .notification-option.selected .option-icon::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .option-content {
+            flex: 1;
+        }
+
+        .option-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .option-desc {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* Privacy Agreement */
+        .privacy-section {
+            padding: 16px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .privacy-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .privacy-checkbox.checked .checkbox {
+            border-color: #333;
+            background: #333;
+            position: relative;
+        }
+
+        .privacy-checkbox.checked .checkbox::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .privacy-text {
+            flex: 1;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .privacy-text strong {
+            color: #333;
+        }
+
+        .privacy-link {
+            color: #666;
+            text-decoration: underline;
+        }
+
+        /* Bottom Bar */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 375px;
+            height: 72px;
+            background: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 16px;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .next-btn {
+            width: 100%;
+            height: 48px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .next-btn:disabled {
+            background: #ddd;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .next-btn:not(:disabled):hover {
+            background: #555;
+        }
+
+        /* Screen Label */
+        .screen-label {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="wireframe">
+    <div class="screen-label">C-07-1: 연락처 및 알림 설정 (375×812px)</div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-btn back-btn"></div>
+        <div class="header-title">연락처 입력</div>
+        <div class="header-spacer"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Guide Message -->
+        <div class="guide-section">
+            <div class="guide-title">주문 상태를 확인할<br>전화번호를 입력해주세요</div>
+            <div class="guide-desc">픽업 준비가 완료되면 알림을 보내드립니다</div>
+        </div>
+
+        <!-- Phone Input -->
+        <div class="input-section">
+            <div class="section-label">전화번호</div>
+            <input type="tel" class="phone-input" placeholder="010-1234-5678">
+            <div class="input-helper">하이픈(-) 없이 숫자만 입력해주세요</div>
+        </div>
+
+        <!-- Notification Method -->
+        <div class="notification-section">
+            <div class="notification-title">알림 받을 방법을 선택해주세요</div>
+            <div class="notification-options">
+                <!-- SMS Option -->
+                <div class="notification-option selected">
+                    <div class="option-icon"></div>
+                    <div class="option-content">
+                        <div class="option-title">SMS (문자 메시지)</div>
+                        <div class="option-desc">문자로 주문 상태를 알려드립니다</div>
+                    </div>
+                </div>
+
+                <!-- KakaoTalk Option -->
+                <div class="notification-option">
+                    <div class="option-icon"></div>
+                    <div class="option-content">
+                        <div class="option-title">카카오톡</div>
+                        <div class="option-desc">카카오톡 알림톡으로 알려드립니다</div>
+                    </div>
+                </div>
+
+                <!-- None Option -->
+                <div class="notification-option">
+                    <div class="option-icon"></div>
+                    <div class="option-content">
+                        <div class="option-title">받지 않음</div>
+                        <div class="option-desc">매장에서 직접 확인하겠습니다</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy Agreement -->
+        <div class="privacy-section">
+            <div class="privacy-checkbox checked">
+                <div class="checkbox"></div>
+                <div class="privacy-text">
+                    <strong>전화번호 수집 및 이용에 동의합니다 (필수)</strong><br>
+                    주문 알림 발송을 위해 사용됩니다.
+                    <a href="#" class="privacy-link">자세히 보기</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="bottom-bar">
+        <button class="next-btn">다음</button>
+    </div>
+</div>
+</body>
+</html>

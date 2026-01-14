@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-02 와이어프레임 - 주문 유형 선택</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .device-frame {
+            width: 375px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            min-height: 812px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #e5e5e5;
+            background: white;
+            position: relative;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            position: absolute;
+            left: 16px;
+        }
+
+        .store-name {
+            flex: 1;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        /* Content */
+        .content {
+            padding: 32px 20px;
+        }
+
+        .page-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 32px;
+        }
+
+        /* Selection Cards */
+        .selection-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .selection-card {
+            border: 2px solid #d1d5db;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            position: relative;
+        }
+
+        .selection-card:hover {
+            border-color: #9ca3af;
+        }
+
+        .selection-card.selected {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
+        .selection-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #fafafa;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .card-info {
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .estimated-time {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .time-icon {
+            font-size: 16px;
+        }
+
+        /* Congestion Badge */
+        .congestion-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .congestion-badge.low {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .congestion-badge.medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .congestion-badge.high {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .congestion-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .congestion-badge.low .congestion-dot {
+            background: #22c55e;
+        }
+
+        .congestion-badge.medium .congestion-dot {
+            background: #f59e0b;
+        }
+
+        .congestion-badge.high .congestion-dot {
+            background: #ef4444;
+        }
+
+        /* Radio Indicator */
+        .radio-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .selection-card.selected .radio-indicator {
+            border-color: #22c55e;
+            background: #22c55e;
+        }
+
+        .selection-card.selected .radio-indicator::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 375px;
+            background: white;
+            padding: 16px 20px;
+            border-top: 1px solid #e5e5e5;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+        }
+
+        .next-btn {
+            width: 100%;
+            padding: 14px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .next-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .next-btn:active:not(:disabled) {
+            background: #16a34a;
+        }
+
+        /* Help Text */
+        .help-text {
+            text-align: center;
+            font-size: 13px;
+            color: #9ca3af;
+            margin-top: 16px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 420px) {
+            body {
+                padding: 0;
+            }
+            .device-frame {
+                border-radius: 0;
+                width: 100%;
+            }
+            .footer {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="device-frame">
+        <!-- Header -->
+        <div class="header">
+            <button class="back-btn">←</button>
+            <div class="store-name">카페 블루보틀</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <h1 class="page-title">주문 방식을 선택해주세요</h1>
+
+            <div class="selection-cards">
+                <!-- Pickup Card -->
+                <div class="selection-card selected" id="pickup-card">
+                    <div class="radio-indicator"></div>
+                    <div class="card-header">
+                        <div class="card-icon">📦</div>
+                        <div class="card-info">
+                            <div class="card-title">픽업</div>
+                            <div class="card-description">매장에서 직접 수령해요</div>
+                        </div>
+                    </div>
+                    <div class="card-meta">
+                        <div class="estimated-time">
+                            <span class="time-icon">⏱</span>
+                            <span>약 10-15분</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dine-in Card (with Congestion Badge) -->
+                <div class="selection-card" id="dinein-card">
+                    <div class="radio-indicator"></div>
+                    <div class="card-header">
+                        <div class="card-icon">🪑</div>
+                        <div class="card-info">
+                            <div class="card-title">매장 이용</div>
+                            <div class="card-description">좌석을 선택하고 자리에서 받아요</div>
+                        </div>
+                    </div>
+                    <div class="card-meta">
+                        <div class="estimated-time">
+                            <span class="time-icon">⏱</span>
+                            <span>약 15-20분</span>
+                        </div>
+                        <div class="congestion-badge medium">
+                            <span class="congestion-dot"></span>
+                            <span>보통</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dine-in Card (Disabled - Example) -->
+                <!-- 
+                <div class="selection-card disabled" id="dinein-card">
+                    <div class="radio-indicator"></div>
+                    <div class="card-header">
+                        <div class="card-icon">🪑</div>
+                        <div class="card-info">
+                            <div class="card-title">매장 이용</div>
+                            <div class="card-description">현재 이용이 불가능합니다</div>
+                        </div>
+                    </div>
+                    <div class="card-meta">
+                        <div class="congestion-badge high">
+                            <span class="congestion-dot"></span>
+                            <span>혼잡</span>
+                        </div>
+                    </div>
+                </div>
+                -->
+            </div>
+
+            <div class="help-text">
+                선택하신 방식에 따라 주문이 진행됩니다.<br>
+                변경은 주문 전까지 가능해요.
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <button class="next-btn">
+                다음 →
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Simple card selection demo
+        const cards = document.querySelectorAll('.selection-card:not(.disabled)');
+        const nextBtn = document.querySelector('.next-btn');
+
+        cards.forEach(card => {
+            card.addEventListener('click', () => {
+                // Remove selected state from all cards
+                cards.forEach(c => c.classList.remove('selected'));
+                // Add selected state to clicked card
+                card.classList.add('selected');
+                // Enable next button
+                nextBtn.disabled = false;
+            });
+        });
+
+        // Initialize with first card selected
+        nextBtn.disabled = false;
+    </script>
+</body>
+</html>
