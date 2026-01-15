@@ -1,456 +1,716 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" style="scroll-behavior: smooth;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C-01-B 와이어프레임 - 매장 상세 (SNS 유입)</title>
+    <title>카페 오더제로 - 메뉴 (SNS Landing)</title>
+
+    <!-- Preload Critical Images -->
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&h=600&fit=crop" fetchpriority="high">
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&h=600&fit=crop" fetchpriority="high">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .device-frame {
-            width: 375px;
-            background: white;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
-            min-height: 100vh;
-        }
-
-        /* Compact Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px;
-            border-bottom: 1px solid #e5e5e5;
-            background: white;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-        }
-
-        .back-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 4px;
-        }
-
-        .store-name-compact {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        .share-btn {
-            background: none;
-            border: 1px solid #d1d5db;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        /* Status Badge */
-        .status-bar {
-            padding: 12px 16px;
-            background: #fafafa;
-            border-bottom: 1px solid #e5e5e5;
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #dcfce7;
-            color: #166534;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: #22c55e;
-            border-radius: 50%;
-        }
-
-        /* Category Tabs */
-        .category-tabs {
-            display: flex;
-            gap: 8px;
-            padding: 16px;
-            background: white;
-            border-bottom: 1px solid #e5e5e5;
-            overflow-x: auto;
+        /* Custom Scroll Snap for Signature Section */
+        .signature-scroll {
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
+            padding-right: 20%;
         }
-
-        .category-tabs::-webkit-scrollbar {
+        .signature-scroll::-webkit-scrollbar {
             display: none;
         }
-
-        .tab {
-            flex-shrink: 0;
-            padding: 8px 16px;
-            background: #f3f4f6;
-            border: none;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #6b7280;
-            cursor: pointer;
-            transition: all 0.2s;
+        .signature-card {
+            scroll-snap-align: start;
         }
 
-        .tab.active {
-            background: #22c55e;
-            color: white;
+        /* Hero Background */
+        .hero-bg {
+            background: linear-gradient(
+                    to bottom,
+                    rgba(0, 0, 0, 0.4),
+                    rgba(0, 0, 0, 0.1)
+            ), url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&h=600&fit=crop');
+            background-size: cover;
+            background-position: center;
         }
 
-        /* Menu List */
-        .menu-list {
-            padding: 16px;
-            padding-bottom: 120px; /* Space for floating footer */
+        /* Smooth Transitions */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .menu-item {
-            display: flex;
-            gap: 16px;
-            padding: 16px 0;
-            border-bottom: 1px solid #f3f4f6;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .menu-item:hover {
-            background: #fafafa;
-            margin: 0 -16px;
-            padding: 16px;
-        }
-
-        .menu-image {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            background: #e5e5e5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-size: 11px;
-            flex-shrink: 0;
-        }
-
-        .menu-details {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .menu-name {
-            font-size: 15px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        .menu-description {
-            font-size: 13px;
-            color: #9ca3af;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .menu-price {
-            font-size: 15px;
-            font-weight: bold;
-            color: #1f2937;
-            margin-top: auto;
-        }
-
-        .menu-badge {
-            display: inline-flex;
-            padding: 4px 8px;
-            background: #fef3c7;
-            color: #92400e;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 500;
-            align-self: flex-start;
-        }
-
-        /* Floating Footer */
-        .floating-footer {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 375px;
-            background: white;
-            padding: 12px 16px;
-            border-top: 1px solid #e5e5e5;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
-        }
-
-        .cart-summary {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            background: #f9fafb;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
-
-        .cart-icon {
-            width: 40px;
-            height: 40px;
-            background: #22c55e;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            position: relative;
-        }
-
-        .cart-badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            background: #ef4444;
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        .cart-info {
-            flex: 1;
-        }
-
-        .cart-count {
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 2px;
-        }
-
-        .cart-total {
-            font-size: 16px;
-            font-weight: bold;
-            color: #1f2937;
-        }
-
-        .primary-btn {
-            width: 100%;
-            padding: 14px;
-            background: #22c55e;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .primary-btn:active {
-            background: #16a34a;
-        }
-
-        /* Empty State (when no items in cart) */
-        .footer-simple {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 375px;
-            background: white;
-            padding: 16px;
-            border-top: 1px solid #e5e5e5;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
-        }
-
-        @media (max-width: 420px) {
-            body {
-                padding: 0;
+        /* Pulse Animation for Popular Badge */
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
             }
-            .device-frame {
-                border-radius: 0;
-                width: 100%;
+            50% {
+                box-shadow: 0 0 0 8px rgba(249, 115, 22, 0);
             }
-            .floating-footer,
-            .footer-simple {
-                width: 100%;
+        }
+        .pulse-badge {
+            animation: pulse-glow 2s infinite;
+        }
+
+        /* Bump Animation for FAB */
+        @keyframes bump {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .bump-animation {
+            animation: bump 0.3s ease-in-out;
+        }
+
+        /* Toast Animation */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 100%);
             }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, 100%);
+            }
+        }
+        .toast-enter {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+        .toast-exit {
+            animation: slideDown 0.3s ease-in forwards;
+        }
+
+        /* Desktop Sidebar */
+        @media (min-width: 768px) {
+            .sidebar-sticky {
+                position: sticky;
+                top: 2rem;
+                height: fit-content;
+            }
+        }
+
+        /* Scroll Margin for Smooth Scroll with Sticky Header */
+        section[id] {
+            scroll-margin-top: 80px;
+        }
+
+        /* Pickup Info Banner Animation */
+        @keyframes slideInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .pickup-info-banner {
+            animation: slideInFromBottom 0.5s ease-out 0.3s both;
         }
     </style>
 </head>
-<body>
-    <div class="device-frame">
-        <!-- Compact Header -->
-        <div class="header">
-            <div class="header-left">
-                <button class="back-btn">←</button>
-                <div class="store-name-compact">카페 블루보틀</div>
-            </div>
-            <button class="share-btn">공유</button>
-        </div>
+<body class="bg-gray-50">
 
-        <!-- Status Bar -->
-        <div class="status-bar">
-            <div class="status-badge">
-                <span class="status-dot"></span>
-                영업중
-            </div>
-        </div>
+<!-- Desktop Layout Wrapper -->
+<div class="md:flex md:max-w-7xl md:mx-auto md:gap-6 md:p-6">
 
-        <!-- Category Tabs -->
-        <div class="category-tabs">
-            <button class="tab active">전체</button>
-            <button class="tab">커피</button>
-            <button class="tab">디저트</button>
-            <button class="tab">베이커리</button>
-            <button class="tab">음료</button>
-        </div>
-
-        <!-- Menu List -->
-        <div class="menu-list">
-            <div class="menu-item">
-                <div class="menu-image">메뉴1</div>
-                <div class="menu-details">
-                    <div class="menu-name">아메리카노</div>
-                    <div class="menu-description">깊고 풍부한 맛의 클래식 아메리카노</div>
-                    <div class="menu-price">4,500원</div>
+    <!-- Left Sidebar (Desktop Only) -->
+    <aside class="hidden md:block md:w-80 sidebar-sticky">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <!-- Profile Hero Image -->
+            <div class="hero-bg h-48 flex items-center justify-center">
+                <div class="text-center text-white">
+                    <div class="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center">
+                        <span class="text-3xl">☕</span>
+                    </div>
+                    <h2 class="text-2xl font-bold">카페 오더제로</h2>
                 </div>
             </div>
 
-            <div class="menu-item">
-                <div class="menu-image">메뉴2</div>
-                <div class="menu-details">
-                    <div class="menu-badge">인기</div>
-                    <div class="menu-name">카푸치노</div>
-                    <div class="menu-description">부드러운 우유 거품이 매력적인 카푸치노</div>
-                    <div class="menu-price">5,000원</div>
+            <!-- Profile Info -->
+            <div class="p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">⭐ 4.8 (2,341개 리뷰)</span>
+                    <button class="text-blue-500 text-sm font-medium hover:underline">
+                        리뷰 보기
+                    </button>
                 </div>
-            </div>
 
-            <div class="menu-item">
-                <div class="menu-image">메뉴3</div>
-                <div class="menu-details">
-                    <div class="menu-badge">인기</div>
-                    <div class="menu-name">카페 라떼</div>
-                    <div class="menu-description">부드럽고 진한 에스프레소와 스팀 밀크의 조화</div>
-                    <div class="menu-price">5,500원</div>
+                <div class="border-t pt-4 space-y-2">
+                    <div class="flex items-start gap-2 text-sm">
+                        <span class="text-gray-400">📍</span>
+                        <span class="text-gray-700">서울시 강남구 테헤란로 123</span>
+                    </div>
+                    <div class="flex items-start gap-2 text-sm">
+                        <span class="text-gray-400">⏰</span>
+                        <span class="text-gray-700">매일 09:00 - 22:00</span>
+                    </div>
+                    <div class="flex items-start gap-2 text-sm">
+                        <span class="text-gray-400">📞</span>
+                        <span class="text-gray-700">02-1234-5678</span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="menu-item">
-                <div class="menu-image">메뉴4</div>
-                <div class="menu-details">
-                    <div class="menu-name">바닐라 라떼</div>
-                    <div class="menu-description">달콤한 바닐라 시럽이 들어간 라떼</div>
-                    <div class="menu-price">6,000원</div>
+                <!-- Pickup Info (Desktop) -->
+                <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 pickup-info-banner">
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-lg">📦</span>
+                        <div class="flex-1">
+                            <p class="font-semibold text-orange-900">픽업으로 주문됩니다</p>
+                            <p class="text-xs text-orange-700 mt-0.5">장바구니에서 변경 가능</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="menu-item">
-                <div class="menu-image">메뉴5</div>
-                <div class="menu-details">
-                    <div class="menu-name">카라멜 마키아또</div>
-                    <div class="menu-description">달콤한 카라멜과 에스프레소의 환상적인 조합</div>
-                    <div class="menu-price">6,500원</div>
-                </div>
-            </div>
+                <button class="w-full bg-gradient-to-r from-pink-500 to-orange-400 text-white py-3 rounded-xl font-medium hover:opacity-90 transition-opacity">
+                    📷 인스타그램 팔로우
+                </button>
 
-            <div class="menu-item">
-                <div class="menu-image">메뉴6</div>
-                <div class="menu-details">
-                    <div class="menu-name">아이스 티</div>
-                    <div class="menu-description">상큼한 레몬향이 가득한 아이스 티</div>
-                    <div class="menu-price">4,000원</div>
-                </div>
-            </div>
-
-            <div class="menu-item">
-                <div class="menu-image">메뉴7</div>
-                <div class="menu-details">
-                    <div class="menu-name">크루아상</div>
-                    <div class="menu-description">겉은 바삭하고 속은 촉촉한 프랑스식 크루아상</div>
-                    <div class="menu-price">3,500원</div>
-                </div>
-            </div>
-
-            <div class="menu-item">
-                <div class="menu-image">메뉴8</div>
-                <div class="menu-details">
-                    <div class="menu-name">블루베리 머핀</div>
-                    <div class="menu-description">신선한 블루베리가 가득한 촉촉한 머핀</div>
-                    <div class="menu-price">4,200원</div>
-                </div>
+                <button onclick="shareStore()" class="w-full border border-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors">
+                    🔗 공유하기
+                </button>
             </div>
         </div>
+    </aside>
 
-        <!-- Floating Footer - With Cart Items -->
-        <div class="floating-footer">
-            <div class="cart-summary">
-                <div class="cart-icon">
-                    🛒
-                    <span class="cart-badge">2</span>
-                </div>
-                <div class="cart-info">
-                    <div class="cart-count">2개 상품</div>
-                    <div class="cart-total">10,000원</div>
-                </div>
-            </div>
-            <button class="primary-btn">
-                주문하기 →
+    <!-- Main Content -->
+    <main class="flex-1 md:min-w-0">
+
+        <!-- Compact Hero (Mobile Only) -->
+        <header class="md:hidden hero-bg h-[20vh] flex flex-col justify-center items-center text-white relative">
+            <button onclick="history.back()" class="absolute top-4 left-4 w-10 h-10 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-black/50 transition-colors">
+                <span class="text-xl">←</span>
             </button>
+
+            <div class="text-center">
+                <div class="w-12 h-12 bg-white rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <span class="text-2xl">☕</span>
+                </div>
+                <h1 class="text-xl font-bold mb-1">카페 오더제로</h1>
+                <div class="flex items-center justify-center gap-3 text-sm">
+                    <span>⭐ 4.8 (리뷰보기)</span>
+                    <span>•</span>
+                    <span>📷 #카페오더제로 1.2K+</span>
+                </div>
+            </div>
+
+            <button class="absolute bottom-4 right-4 px-4 py-2 bg-white text-gray-900 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors">
+                팔로우
+            </button>
+        </header>
+
+        <!-- Signature Menu Section -->
+        <section class="bg-[#FFF9F5] py-6 md:rounded-t-2xl">
+            <div class="px-4 mb-4">
+                <p class="text-xs text-orange-600 font-semibold mb-1 tracking-wide">🔥 인스타에서 본 바로 그 메뉴</p>
+                <h2 class="text-lg font-bold text-gray-900">가장 많이 찾은 시그니처</h2>
+            </div>
+
+            <div class="signature-scroll flex gap-4 px-4 overflow-x-auto pb-2">
+                <!-- Signature Card 1 -->
+                <div class="signature-card flex-none w-72">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                        <div class="relative aspect-square">
+                            <img
+                                    src="https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&h=600&fit=crop"
+                                    alt="딸기 라떼"
+                                    class="w-full h-full object-cover"
+                                    fetchpriority="high"
+                                    loading="eager"
+                            />
+                            <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-orange-600 pulse-badge">
+                                #1 인기
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-1">프리미엄 딸기 라떼</h3>
+                            <p class="text-sm text-gray-600 mb-3">제철 딸기와 우유의 환상 조합 🍓</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xl font-bold text-gray-900">6,500원</span>
+                                <button onclick="addToCart('프리미엄 딸기 라떼', 6500, this)" class="add-btn bg-orange-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors">
+                                    담기 +
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Signature Card 2 -->
+                <div class="signature-card flex-none w-72">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                        <div class="relative aspect-square">
+                            <img
+                                    src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600&h=600&fit=crop"
+                                    alt="말차 라떼"
+                                    class="w-full h-full object-cover"
+                                    fetchpriority="high"
+                                    loading="eager"
+                            />
+                            <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-green-600">
+                                시즌 한정
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-1">제주 말차 크림 라떼</h3>
+                            <p class="text-sm text-gray-600 mb-3">부드러운 크림과 진한 말차 🍵</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xl font-bold text-gray-900">6,800원</span>
+                                <button onclick="addToCart('제주 말차 크림 라떼', 6800, this)" class="add-btn bg-orange-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors">
+                                    담기 +
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Signature Card 3 -->
+                <div class="signature-card flex-none w-72">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                        <div class="relative aspect-square">
+                            <img
+                                    src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&h=600&fit=crop"
+                                    alt="티라미수 케이크"
+                                    class="w-full h-full object-cover"
+                                    fetchpriority="high"
+                            />
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-1">시그니처 티라미수</h3>
+                            <p class="text-sm text-gray-600 mb-3">직접 만든 이탈리아 정통 디저트 ✨</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xl font-bold text-gray-900">7,500원</span>
+                                <button onclick="addToCart('시그니처 티라미수', 7500, this)" class="add-btn bg-orange-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors">
+                                    담기 +
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sticky Category Tabs -->
+        <nav id="categoryTabs" class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 transition-all duration-300">
+            <div class="flex items-center px-4 overflow-x-auto">
+                <!-- Mini Logo (shown on scroll, mobile only) -->
+                <div id="miniLogo" class="hidden md:hidden items-center mr-4 opacity-0 transition-opacity duration-300">
+                    <span class="text-xl mr-2">☕</span>
+                    <span class="text-sm font-bold whitespace-nowrap">카페 오더제로</span>
+                </div>
+
+                <!-- Category Buttons -->
+                <div class="flex gap-2 py-3">
+                    <button onclick="scrollToCategory('all')" data-category="all" class="tab-btn active px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-orange-500 text-white">
+                        전체
+                    </button>
+                    <button onclick="scrollToCategory('coffee')" data-category="coffee" class="tab-btn px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors hover:bg-gray-100 text-gray-700">
+                        ☕ 커피
+                    </button>
+                    <button onclick="scrollToCategory('non-coffee')" data-category="non-coffee" class="tab-btn px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors hover:bg-gray-100 text-gray-700">
+                        🥤 논커피
+                    </button>
+                    <button onclick="scrollToCategory('dessert')" data-category="dessert" class="tab-btn px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors hover:bg-gray-100 text-gray-700">
+                        🍰 디저트
+                    </button>
+                    <button onclick="scrollToCategory('ade')" data-category="ade" class="tab-btn px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors hover:bg-gray-100 text-gray-700">
+                        🧃 에이드
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Pickup Info Banner (Mobile, below sticky tabs) -->
+        <div class="md:hidden bg-orange-50 border-b border-orange-200 px-4 py-3 pickup-info-banner">
+            <div class="flex items-center gap-2 text-sm">
+                <span class="text-lg">📦</span>
+                <div class="flex-1">
+                    <p class="font-semibold text-orange-900">픽업으로 주문됩니다</p>
+                    <p class="text-xs text-orange-700">장바구니에서 변경 가능</p>
+                </div>
+            </div>
         </div>
 
-        <!-- Simple Footer - No Cart Items (Alternative) -->
-        <!-- 
-        <div class="footer-simple">
-            <button class="primary-btn">
-                주문하기 →
-            </button>
+        <!-- Standard Menu List -->
+        <div class="bg-white md:rounded-b-2xl">
+
+            <!-- Coffee Section -->
+            <section id="coffee" class="divide-y divide-gray-100">
+                <h3 class="sr-only">커피</h3>
+
+                <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+                    <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300&h=225&fit=crop" alt="아메리카노" class="w-20 h-15 rounded-lg object-cover" loading="lazy" />
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-gray-900 truncate">아메리카노</h4>
+                        <p class="text-sm text-gray-600 truncate">진한 에스프레소 샷</p>
+                        <p class="text-lg font-bold text-gray-900 mt-1">4,500원</p>
+                    </div>
+                    <button onclick="addToCart('아메리카노', 4500, this)" class="add-btn flex-none w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                        <span class="text-xl">+</span>
+                    </button>
+                </article>
+
+                <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+                    <img src="https://images.unsplash.com/photo-1511920170033-f8396924c348?w=300&h=225&fit=crop" alt="카페 라떼" class="w-20 h-15 rounded-lg object-cover" loading="lazy" />
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-gray-900 truncate">카페 라떼</h4>
+                        <p class="text-sm text-gray-600 truncate">부드러운 우유 거품</p>
+                        <p class="text-lg font-bold text-gray-900 mt-1">5,000원</p>
+                    </div>
+                    <button onclick="addToCart('카페 라떼', 5000, this)" class="add-btn flex-none w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                        <span class="text-xl">+</span>
+                    </button>
+                </article>
+
+                <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+                    <img src="https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=300&h=225&fit=crop" alt="카푸치노" class="w-20 h-15 rounded-lg object-cover" loading="lazy" />
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-gray-900 truncate">카푸치노</h4>
+                        <p class="text-sm text-gray-600 truncate">풍성한 우유 거품</p>
+                        <p class="text-lg font-bold text-gray-900 mt-1">5,000원</p>
+                    </div>
+                    <button onclick="addToCart('카푸치노', 5000, this)" class="add-btn flex-none w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                        <span class="text-xl">+</span>
+                    </button>
+                </article>
+            </section>
+
+            <!-- Non-Coffee Section -->
+            <section id="non-coffee" class="divide-y divide-gray-100">
+                <h3 class="sr-only">논커피</h3>
+
+                <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+                    <img src="https://images.unsplash.com/photo-1485808191679-5f86510681a2?w=300&h=225&fit=crop" alt="바닐라 라떼" class="w-20 h-15 rounded-lg object-cover" loading="lazy" />
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-gray-900 truncate">바닐라 라떼</h4>
+                        <p class="text-sm text-gray-600 truncate">달콤한 바닐라 시럽</p>
+                        <p class="text-lg font-bold text-gray-900 mt-1">5,500원</p>
+                    </div>
+                    <button onclick="addToCart('바닐라 라떼', 5500, this)" class="add-btn flex-none w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                        <span class="text-xl">+</span>
+                    </button>
+                </article>
+
+                <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+                    <img src="https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300&h=225&fit=crop" alt="핫초코" class="w-20 h-15 rounded-lg object-cover" loading="lazy" />
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-gray-900 truncate">핫초코</h4>
+                        <p class="text-sm text-gray-600 truncate">진한 초콜릿</p>
+                        <p class="text-lg font-bold text-gray-900 mt-1">5,500원</p>
+                    </div>
+                    <button onclick="addToCart('핫초코', 5500, this)" class="add-btn flex-none w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                        <span class="text-xl">+</span>
+                    </button>
+                </article>
+            </section>
+
+            <!-- Dessert Section -->
+            <section id="dessert" class="divide-y divide-gray-100">
+                <h3 class="sr-only">디저트</h3>
+
+                <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+                    <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&h=225&fit=crop" alt="치즈케이크" class="w-20 h-15 rounded-lg object-cover" loading="lazy" />
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-gray-900 truncate">뉴욕 치즈케이크</h4>
+                        <p class="text-sm text-gray-600 truncate">부드러운 크림치즈</p>
+                        <p class="text-lg font-bold text-gray-900 mt-1">6,500원</p>
+                    </div>
+                    <button onclick="addToCart('뉴욕 치즈케이크', 6500, this)" class="add-btn flex-none w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                        <span class="text-xl">+</span>
+                    </button>
+                </article>
+
+                <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+                    <img src="https://images.unsplash.com/photo-1558326567-98ae2405596b?w=300&h=225&fit=crop" alt="마카롱" class="w-20 h-15 rounded-lg object-cover" loading="lazy" />
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-gray-900 truncate">마카롱 (5종)</h4>
+                        <p class="text-sm text-gray-600 truncate">매일 직접 굽는 수제 마카롱</p>
+                        <p class="text-lg font-bold text-gray-900 mt-1">8,000원</p>
+                    </div>
+                    <button onclick="addToCart('마카롱 (5종)', 8000, this)" class="add-btn flex-none w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                        <span class="text-xl">+</span>
+                    </button>
+                </article>
+            </section>
+
+            <!-- Ade Section -->
+            <section id="ade" class="divide-y divide-gray-100">
+                <h3 class="sr-only">에이드</h3>
+
+                <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+                    <img src="https://images.unsplash.com/photo-1546548970-71785318a17b?w=300&h=225&fit=crop" alt="레몬 에이드" class="w-20 h-15 rounded-lg object-cover" loading="lazy" />
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-gray-900 truncate">레몬 에이드</h4>
+                        <p class="text-sm text-gray-600 truncate">상큼한 레몬</p>
+                        <p class="text-lg font-bold text-gray-900 mt-1">5,500원</p>
+                    </div>
+                    <button onclick="addToCart('레몬 에이드', 5500, this)" class="add-btn flex-none w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                        <span class="text-xl">+</span>
+                    </button>
+                </article>
+
+                <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+                    <img src="https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=300&h=225&fit=crop" alt="자몽 에이드" class="w-20 h-15 rounded-lg object-cover" loading="lazy" />
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-gray-900 truncate">자몽 에이드</h4>
+                        <p class="text-sm text-gray-600 truncate">새콤달콤 자몽</p>
+                        <p class="text-lg font-bold text-gray-900 mt-1">6,000원</p>
+                    </div>
+                    <button onclick="addToCart('자몽 에이드', 6000, this)" class="add-btn flex-none w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                        <span class="text-xl">+</span>
+                    </button>
+                </article>
+            </section>
+
         </div>
-        -->
+
+        <!-- Bottom Spacer for FAB -->
+        <div class="h-24"></div>
+
+    </main>
+</div>
+
+<!-- Floating Action Button (FAB) -->
+<button id="fabButton" onclick="goToCart()" class="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full shadow-2xl flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 hover:scale-110 z-40">
+    <div class="text-center">
+        <span class="text-2xl block leading-none">🛒</span>
+        <span class="text-xs font-bold" id="cartCount">0</span>
     </div>
+</button>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex flex-col-reverse gap-2 pointer-events-none">
+    <!-- Toasts will be dynamically inserted here -->
+</div>
+
+<script>
+    // ==================== STATE MANAGEMENT ====================
+    let cartCount = 0;
+    let cartItems = [];
+    let isScrollingProgrammatically = false;
+
+    // 🎯 C-01-B Special Logic: Default Order Type
+    const orderType = 'pickup'; // SNS Landing always starts with pickup
+
+    // ==================== SCROLL SPY (IntersectionObserver) ====================
+    const observerOptions = {
+        root: null,
+        rootMargin: '-20% 0px -80% 0px',
+        threshold: 0
+    };
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+        if (isScrollingProgrammatically) return;
+
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const sectionId = entry.target.id;
+                updateActiveTab(sectionId);
+            }
+        });
+    }, observerOptions);
+
+    // Observe all sections
+    document.querySelectorAll('section[id]').forEach(section => {
+        sectionObserver.observe(section);
+    });
+
+    // ==================== TAB NAVIGATION ====================
+    function updateActiveTab(categoryId) {
+        const allTabs = document.querySelectorAll('.tab-btn');
+        allTabs.forEach(tab => {
+            const tabCategory = tab.getAttribute('data-category');
+            if (tabCategory === categoryId || (categoryId === 'coffee' && tabCategory === 'all')) {
+                tab.classList.add('bg-orange-500', 'text-white');
+                tab.classList.remove('text-gray-700');
+            } else {
+                tab.classList.remove('bg-orange-500', 'text-white');
+                tab.classList.add('text-gray-700');
+            }
+        });
+    }
+
+    function scrollToCategory(categoryId) {
+        isScrollingProgrammatically = true;
+
+        if (categoryId === 'all') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            const section = document.getElementById(categoryId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        updateActiveTab(categoryId);
+
+        // Re-enable observer after scroll completes
+        setTimeout(() => {
+            isScrollingProgrammatically = false;
+        }, 1000);
+    }
+
+    // ==================== SCROLL DETECTION FOR MINI LOGO & FAB ====================
+    let lastScrollTop = 0;
+    const heroHeight = window.innerWidth < 768 ? window.innerHeight * 0.2 : 0;
+    const miniLogo = document.getElementById('miniLogo');
+    const fabButton = document.getElementById('fabButton');
+
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        // Show mini logo on mobile after scrolling past hero
+        if (window.innerWidth < 768) {
+            if (scrollTop > heroHeight) {
+                miniLogo.classList.remove('hidden');
+                miniLogo.classList.add('flex');
+                setTimeout(() => miniLogo.classList.remove('opacity-0'), 10);
+            } else {
+                miniLogo.classList.add('opacity-0');
+                setTimeout(() => {
+                    miniLogo.classList.add('hidden');
+                    miniLogo.classList.remove('flex');
+                }, 300);
+            }
+        }
+
+        // Show/hide FAB based on scroll position
+        if (scrollTop > 200) {
+            fabButton.classList.remove('opacity-0', 'pointer-events-none');
+            fabButton.classList.add('opacity-100', 'pointer-events-auto');
+        } else {
+            fabButton.classList.add('opacity-0', 'pointer-events-none');
+            fabButton.classList.remove('opacity-100', 'pointer-events-auto');
+        }
+
+        lastScrollTop = scrollTop;
+    });
+
+    // ==================== ADD TO CART FUNCTIONALITY ====================
+    function addToCart(itemName, price, buttonElement) {
+        // Update cart state
+        cartCount++;
+        cartItems.push({
+            name: itemName,
+            price: price,
+            orderType: orderType // Store with default pickup type
+        });
+
+        // Update FAB counter
+        document.getElementById('cartCount').textContent = cartCount;
+
+        // Bump animation on FAB
+        fabButton.classList.add('bump-animation');
+        setTimeout(() => fabButton.classList.remove('bump-animation'), 300);
+
+        // Button feedback (optional - change text temporarily)
+        const originalText = buttonElement.innerHTML;
+        buttonElement.innerHTML = '✓ 담김';
+        buttonElement.classList.add('bg-green-500');
+        setTimeout(() => {
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('bg-green-500');
+        }, 1000);
+
+        // 🎯 C-01-B Special Logic: Show pickup-specific toast
+        showPickupToast(itemName);
+    }
+
+    // ==================== TOAST NOTIFICATION SYSTEM ====================
+    function showPickupToast(itemName) {
+        const toastContainer = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast-enter bg-orange-500 text-white px-5 py-3 rounded-2xl shadow-lg pointer-events-auto max-w-sm';
+
+        toast.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="text-lg">📦</span>
+                <div class="flex-1">
+                    <p class="font-semibold text-sm">Added to cart (Pickup)</p>
+                    <p class="text-xs opacity-90">${itemName} • 장바구니에서 변경 가능</p>
+                </div>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function showToast(message) {
+        const toastContainer = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast-enter bg-green-500 text-white px-6 py-3 rounded-full shadow-lg pointer-events-auto';
+        toast.textContent = message;
+
+        toastContainer.appendChild(toast);
+
+        // Auto remove after 2 seconds
+        setTimeout(() => {
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
+    }
+
+    // ==================== UTILITY FUNCTIONS ====================
+    function goToCart() {
+        if (cartCount > 0) {
+            // In real implementation, navigate to cart page (C-06)
+            const totalAmount = cartItems.reduce((sum, item) => sum + item.price, 0);
+            alert(`🛒 장바구니 (픽업)\n\n상품 ${cartCount}개\n총 ${totalAmount.toLocaleString()}원\n\n💡 주문 방식은 장바구니(C-06)에서 변경할 수 있습니다.\n\n주문 페이지로 이동합니다.`);
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function shareStore() {
+        if (navigator.share) {
+            navigator.share({
+                title: '카페 오더제로',
+                text: '카페 오더제로에서 주문하세요!',
+                url: window.location.href
+            }).catch(() => {
+                fallbackShare();
+            });
+        } else {
+            fallbackShare();
+        }
+    }
+
+    function fallbackShare() {
+        navigator.clipboard.writeText(window.location.href);
+        showToast('🔗 링크가 복사되었습니다!');
+    }
+
+    // ==================== PAGE LOAD INITIALIZATION ====================
+    // Store order type in sessionStorage for consistency
+    sessionStorage.setItem('orderType', orderType);
+
+    console.log('🎯 C-01-B (SNS Landing) - Order Type: ' + orderType);
+</script>
+
 </body>
 </html>

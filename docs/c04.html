@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ko" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카페 오더제로 - 메뉴</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Heroicons (Optional for better icons) -->
+    <script src="https://unpkg.com/@heroicons/react@2.0.18/outline/index.js"></script>
+
+    <style>
+        /* Smooth scroll snap for categories */
+        .category-scroll {
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .category-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Scroll margin for sections (Header 60px + Toggle 80px + Category 60px = 140px) */
+        section[id] {
+            scroll-margin-top: 140px;
+        }
+
+        /* Fade animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Bump animation for FAB */
+        @keyframes bump {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .bump-animation {
+            animation: bump 0.3s ease-in-out;
+        }
+
+        /* Toast animations */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 100%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, 100%);
+            }
+        }
+        .toast-enter {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+        .toast-exit {
+            animation: slideDown 0.3s ease-in forwards;
+        }
+
+        /* Toggle switch animation */
+        .toggle-slider {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<!-- Sticky Header -->
+<header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+        <!-- Back Button -->
+        <button onclick="history.back()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </button>
+
+        <!-- Store Name -->
+        <h1 class="text-lg font-semibold text-gray-900">카페 오더제로</h1>
+
+        <!-- Right Icons -->
+        <div class="flex items-center gap-2">
+            <button class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </button>
+            <button onclick="shareStore()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- Order Type Toggle Section -->
+<div class="sticky top-14 z-40 bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-3xl mx-auto px-4 py-3">
+        <!-- iOS-style Segmented Control -->
+        <div class="relative bg-gray-100 rounded-full p-1 flex">
+            <!-- Background Slider -->
+            <div id="toggleSlider" class="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white rounded-full shadow-md toggle-slider"></div>
+
+            <!-- Pickup Button -->
+            <button
+                    onclick="switchOrderType('pickup')"
+                    id="pickupBtn"
+                    class="relative z-10 flex-1 py-2.5 text-sm font-semibold transition-colors rounded-full pickup-active"
+            >
+                🛍️ 픽업
+            </button>
+
+            <!-- Dine-in Button -->
+            <button
+                    onclick="switchOrderType('dinein')"
+                    id="dineinBtn"
+                    class="relative z-10 flex-1 py-2.5 text-sm font-semibold transition-colors rounded-full text-gray-600"
+            >
+                🍽️ 매장 이용
+            </button>
+        </div>
+
+        <!-- Meta Info -->
+        <div id="orderMeta" class="mt-2 text-center text-sm text-gray-600">
+            <span>⏱ 약 10-15분 소요</span>
+        </div>
+    </div>
+</div>
+
+<!-- Category Navigation (Sticky) -->
+<nav class="sticky top-[140px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-200">
+    <div class="max-w-3xl mx-auto px-4 overflow-x-auto category-scroll">
+        <div class="flex gap-2 py-3">
+            <button onclick="scrollToCategory('coffee')" data-category="coffee" class="tab-btn active px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-orange-500 text-white">
+                ☕ 커피
+            </button>
+            <button onclick="scrollToCategory('non-coffee')" data-category="non-coffee" class="tab-btn px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors hover:bg-gray-100 text-gray-700">
+                🥤 논커피
+            </button>
+            <button onclick="scrollToCategory('dessert')" data-category="dessert" class="tab-btn px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors hover:bg-gray-100 text-gray-700">
+                🍰 디저트
+            </button>
+            <button onclick="scrollToCategory('ade')" data-category="ade" class="tab-btn px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors hover:bg-gray-100 text-gray-700">
+                🧃 에이드
+            </button>
+            <button onclick="scrollToCategory('tea')" data-category="tea" class="tab-btn px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors hover:bg-gray-100 text-gray-700">
+                🍵 티
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="max-w-3xl mx-auto bg-white">
+
+    <!-- Coffee Section -->
+    <section id="coffee" class="divide-y divide-gray-100">
+        <h2 class="sr-only">커피</h2>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/4a5568/ffffff?text=Americano" alt="아메리카노" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">아메리카노</h3>
+                <p class="text-sm text-gray-600 truncate">진한 에스프레소 샷</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">4,500원</p>
+            </div>
+            <button onclick="addToCart('아메리카노', 4500, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/6b7280/ffffff?text=Latte" alt="카페 라떼" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">카페 라떼</h3>
+                <p class="text-sm text-gray-600 truncate">부드러운 우유 거품</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">5,000원</p>
+            </div>
+            <button onclick="addToCart('카페 라떼', 5000, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/8b5cf6/ffffff?text=Cappuccino" alt="카푸치노" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">카푸치노</h3>
+                <p class="text-sm text-gray-600 truncate">풍성한 우유 거품</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">5,000원</p>
+            </div>
+            <button onclick="addToCart('카푸치노', 5000, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/059669/ffffff?text=Flat+White" alt="플랫화이트" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">플랫화이트</h3>
+                <p class="text-sm text-gray-600 truncate">벨벳 같은 마이크로 폼</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">5,800원</p>
+            </div>
+            <button onclick="addToCart('플랫화이트', 5800, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+    </section>
+
+    <!-- Non-Coffee Section -->
+    <section id="non-coffee" class="divide-y divide-gray-100">
+        <h2 class="sr-only">논커피</h2>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/ec4899/ffffff?text=Vanilla" alt="바닐라 라떼" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">바닐라 라떼</h3>
+                <p class="text-sm text-gray-600 truncate">달콤한 바닐라 시럽</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">5,500원</p>
+            </div>
+            <button onclick="addToCart('바닐라 라떼', 5500, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/7c3aed/ffffff?text=Hot+Choco" alt="핫초코" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">핫초코</h3>
+                <p class="text-sm text-gray-600 truncate">진한 초콜릿</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">5,500원</p>
+            </div>
+            <button onclick="addToCart('핫초코', 5500, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/10b981/ffffff?text=Matcha" alt="말차 라떼" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">제주 말차 라떼</h3>
+                <p class="text-sm text-gray-600 truncate">진한 말차와 우유</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">6,000원</p>
+            </div>
+            <button onclick="addToCart('제주 말차 라떼', 6000, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+    </section>
+
+    <!-- Dessert Section -->
+    <section id="dessert" class="divide-y divide-gray-100">
+        <h2 class="sr-only">디저트</h2>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/f59e0b/ffffff?text=Cake" alt="치즈케이크" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">뉴욕 치즈케이크</h3>
+                <p class="text-sm text-gray-600 truncate">부드러운 크림치즈</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">6,500원</p>
+            </div>
+            <button onclick="addToCart('뉴욕 치즈케이크', 6500, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/ef4444/ffffff?text=Tiramisu" alt="티라미수" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">시그니처 티라미수</h3>
+                <p class="text-sm text-gray-600 truncate">이탈리아 정통 디저트</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">7,500원</p>
+            </div>
+            <button onclick="addToCart('시그니처 티라미수', 7500, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/ec4899/ffffff?text=Macaron" alt="마카롱" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">마카롱 (5개)</h3>
+                <p class="text-sm text-gray-600 truncate">매일 굽는 수제 마카롱</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">8,000원</p>
+            </div>
+            <button onclick="addToCart('마카롱 (5개)', 8000, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+    </section>
+
+    <!-- Ade Section -->
+    <section id="ade" class="divide-y divide-gray-100">
+        <h2 class="sr-only">에이드</h2>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/fbbf24/ffffff?text=Lemon" alt="레몬 에이드" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">레몬 에이드</h3>
+                <p class="text-sm text-gray-600 truncate">상큼한 레몬</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">5,500원</p>
+            </div>
+            <button onclick="addToCart('레몬 에이드', 5500, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/f97316/ffffff?text=Grapefruit" alt="자몽 에이드" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">자몽 에이드</h3>
+                <p class="text-sm text-gray-600 truncate">새콤달콤 자몽</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">6,000원</p>
+            </div>
+            <button onclick="addToCart('자몽 에이드', 6000, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/3b82f6/ffffff?text=Blue+Lemon" alt="블루레몬 에이드" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">블루레몬 에이드</h3>
+                <p class="text-sm text-gray-600 truncate">시원한 청량감</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">6,000원</p>
+            </div>
+            <button onclick="addToCart('블루레몬 에이드', 6000, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+    </section>
+
+    <!-- Tea Section -->
+    <section id="tea" class="divide-y divide-gray-100">
+        <h2 class="sr-only">티</h2>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/dc2626/ffffff?text=Earl+Grey" alt="얼그레이" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">얼그레이</h3>
+                <p class="text-sm text-gray-600 truncate">클래식 홍차</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">4,800원</p>
+            </div>
+            <button onclick="addToCart('얼그레이', 4800, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+
+        <article class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <img src="https://placehold.co/100x100/f97316/ffffff?text=Chamomile" alt="캐모마일" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 truncate">캐모마일</h3>
+                <p class="text-sm text-gray-600 truncate">편안한 허브티</p>
+                <p class="text-lg font-bold text-gray-900 mt-1">5,000원</p>
+            </div>
+            <button onclick="addToCart('캐모마일', 5000, this)" class="flex-none w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <span class="text-xl font-light">+</span>
+            </button>
+        </article>
+    </section>
+
+    <!-- Bottom Spacer -->
+    <div class="h-24"></div>
+</main>
+
+<!-- Floating Action Button (FAB) -->
+<button id="fabButton" onclick="goToCart()" class="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full shadow-2xl flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 hover:scale-110 z-50">
+    <div class="relative text-center">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        <span id="cartBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span>
+    </div>
+</button>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex flex-col-reverse gap-2 pointer-events-none">
+    <!-- Toasts will be dynamically inserted here -->
+</div>
+
+<script>
+    // ==================== STATE MANAGEMENT ====================
+    let cartCount = 0;
+    let cartItems = [];
+    let orderType = 'pickup'; // Default: pickup
+    let isScrollingProgrammatically = false;
+
+    // ==================== ORDER TYPE TOGGLE ====================
+    function switchOrderType(type) {
+        orderType = type;
+
+        // Update UI
+        const pickupBtn = document.getElementById('pickupBtn');
+        const dineinBtn = document.getElementById('dineinBtn');
+        const slider = document.getElementById('toggleSlider');
+        const metaInfo = document.getElementById('orderMeta');
+
+        if (type === 'pickup') {
+            slider.style.transform = 'translateX(0)';
+            pickupBtn.classList.add('pickup-active');
+            pickupBtn.classList.remove('text-gray-600');
+            dineinBtn.classList.remove('dinein-active');
+            dineinBtn.classList.add('text-gray-600');
+            metaInfo.innerHTML = '<span>⏱ 약 10-15분 소요</span>';
+        } else {
+            slider.style.transform = 'translateX(100%)';
+            dineinBtn.classList.add('dinein-active');
+            dineinBtn.classList.remove('text-gray-600');
+            pickupBtn.classList.remove('pickup-active');
+            pickupBtn.classList.add('text-gray-600');
+            metaInfo.innerHTML = '<span>☕ 머그컵 제공</span> <span class="mx-2">•</span> <span>💡 혼잡도: <span class="text-amber-600 font-semibold">보통</span></span>';
+        }
+
+        console.log('Order type changed to:', type);
+    }
+
+    // ==================== SCROLL SPY (IntersectionObserver) ====================
+    const observerOptions = {
+        root: null,
+        rootMargin: '-30% 0px -70% 0px',
+        threshold: 0
+    };
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+        if (isScrollingProgrammatically) return;
+
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const sectionId = entry.target.id;
+                updateActiveTab(sectionId);
+            }
+        });
+    }, observerOptions);
+
+    // Observe all sections
+    document.querySelectorAll('section[id]').forEach(section => {
+        sectionObserver.observe(section);
+    });
+
+    // ==================== TAB NAVIGATION ====================
+    function updateActiveTab(categoryId) {
+        const allTabs = document.querySelectorAll('.tab-btn');
+        allTabs.forEach(tab => {
+            const tabCategory = tab.getAttribute('data-category');
+            if (tabCategory === categoryId) {
+                tab.classList.add('bg-orange-500', 'text-white');
+                tab.classList.remove('text-gray-700');
+            } else {
+                tab.classList.remove('bg-orange-500', 'text-white');
+                tab.classList.add('text-gray-700');
+            }
+        });
+    }
+
+    function scrollToCategory(categoryId) {
+        isScrollingProgrammatically = true;
+
+        const section = document.getElementById(categoryId);
+        if (section) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        updateActiveTab(categoryId);
+
+        // Re-enable observer after scroll completes
+        setTimeout(() => {
+            isScrollingProgrammatically = false;
+        }, 1000);
+    }
+
+    // ==================== FLOATING ACTION BUTTON ====================
+    const fabButton = document.getElementById('fabButton');
+
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        // Show FAB after scrolling 200px
+        if (scrollTop > 200 || cartCount > 0) {
+            fabButton.classList.remove('opacity-0', 'pointer-events-none');
+            fabButton.classList.add('opacity-100', 'pointer-events-auto');
+        } else {
+            fabButton.classList.add('opacity-0', 'pointer-events-none');
+            fabButton.classList.remove('opacity-100', 'pointer-events-auto');
+        }
+    });
+
+    // ==================== ADD TO CART FUNCTIONALITY ====================
+    function addToCart(itemName, price, buttonElement) {
+        // Update cart state
+        cartCount++;
+        cartItems.push({ name: itemName, price: price, orderType: orderType });
+
+        // Update FAB badge
+        document.getElementById('cartBadge').textContent = cartCount;
+
+        // Show FAB immediately if hidden
+        fabButton.classList.remove('opacity-0', 'pointer-events-none');
+        fabButton.classList.add('opacity-100', 'pointer-events-auto');
+
+        // Bump animation on FAB
+        fabButton.classList.add('bump-animation');
+        setTimeout(() => fabButton.classList.remove('bump-animation'), 300);
+
+        // Button feedback
+        const originalHTML = buttonElement.innerHTML;
+        buttonElement.innerHTML = '<span class="text-lg">✓</span>';
+        buttonElement.classList.add('bg-green-500', 'scale-90');
+        setTimeout(() => {
+            buttonElement.innerHTML = originalHTML;
+            buttonElement.classList.remove('bg-green-500', 'scale-90');
+        }, 800);
+
+        // Show toast message
+        const orderTypeEmoji = orderType === 'pickup' ? '📦' : '🍽️';
+        const orderTypeText = orderType === 'pickup' ? '픽업' : '매장 이용';
+        showToast(`${orderTypeEmoji} ${itemName} 담았습니다 (${orderTypeText})`);
+    }
+
+    // ==================== TOAST NOTIFICATION SYSTEM ====================
+    function showToast(message) {
+        const toastContainer = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast-enter bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg pointer-events-auto text-sm font-medium';
+        toast.textContent = message;
+
+        toastContainer.appendChild(toast);
+
+        // Auto remove after 2 seconds
+        setTimeout(() => {
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
+    }
+
+    // ==================== UTILITY FUNCTIONS ====================
+    function goToCart() {
+        if (cartCount > 0) {
+            const total = cartItems.reduce((sum, item) => sum + item.price, 0);
+            alert(`🛒 장바구니\n\n상품 수: ${cartCount}개\n총 금액: ${total.toLocaleString()}원\n주문 방식: ${orderType === 'pickup' ? '픽업 📦' : '매장 이용 🍽️'}\n\n장바구니 페이지로 이동합니다.`);
+            // In real app: navigate to C-06 (Cart page)
+        } else {
+            showToast('장바구니가 비어있습니다');
+        }
+    }
+
+    function shareStore() {
+        if (navigator.share) {
+            navigator.share({
+                title: '카페 오더제로',
+                text: '카페 오더제로에서 주문하세요!',
+                url: window.location.href
+            }).catch(() => {
+                fallbackShare();
+            });
+        } else {
+            fallbackShare();
+        }
+    }
+
+    function fallbackShare() {
+        navigator.clipboard.writeText(window.location.href);
+        showToast('🔗 링크가 복사되었습니다!');
+    }
+
+    // ==================== INITIALIZE ====================
+    // Set initial toggle state
+    switchOrderType('pickup');
+</script>
+
+</body>
+</html>

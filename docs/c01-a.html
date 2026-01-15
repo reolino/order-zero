@@ -3,329 +3,423 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C-01-A 와이어프레임 - 매장 상세</title>
+    <meta name="description" content="카페 오더제로 - 서울시 강남구 테헤란로 123. 간편하게 픽업 주문하세요.">
+    <title>카페 오더제로 | Order-Zero</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#22c55e',
+                        'primary-hover': '#16a34a',
+                        'primary-disabled': '#9ca3af',
+                        secondary: '#f59e0b',
+                        danger: '#ef4444',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Styles -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        @keyframes subtle-zoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
 
-        .device-frame {
-            width: 375px;
-            background: white;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
+        .hero-zoom {
+            animation: subtle-zoom 20s ease-in-out infinite alternate;
         }
 
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            padding: 16px;
-            border-bottom: 1px solid #e5e5e5;
-            background: white;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        .pulse-dot {
+            animation: pulse 2s ease-in-out infinite;
         }
 
-        .share-btn {
-            background: none;
-            border: 1px solid #d1d5db;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        /* Hero Image */
-        .hero-image {
-            width: 100%;
-            height: 200px;
-            background: #e5e5e5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-size: 14px;
-        }
-
-        /* Store Info */
-        .store-info {
-            padding: 20px 16px;
-        }
-
-        .store-name {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 12px;
-            color: #1f2937;
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #dcfce7;
-            color: #166534;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-
-        .status-dot {
+        /* Custom scrollbar for desktop */
+        .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
-            height: 8px;
-            background: #22c55e;
-            border-radius: 50%;
         }
 
-        .hours {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 8px;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
 
-        .address {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 12px;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
         }
 
-        .detail-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: none;
-            border: none;
-            color: #3b82f6;
-            font-size: 14px;
-            text-decoration: underline;
-            cursor: pointer;
-            padding: 0;
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
 
-        /* Popular Menu Section */
-        .menu-section {
-            padding: 20px 0;
-            background: #fafafa;
+        /* Scroll Header Transition */
+        .mobile-header {
+            transition: all 0.3s ease-in-out;
         }
 
-        .menu-section-title {
-            font-size: 18px;
-            font-weight: bold;
-            padding: 0 16px;
-            margin-bottom: 16px;
+        .mobile-header.scrolled {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .menu-scroll {
-            display: flex;
-            gap: 12px;
-            padding: 0 16px;
-            overflow-x: auto;
-            scrollbar-width: none;
+        .mobile-header.scrolled .header-button {
+            background: #f3f4f6 !important;
+            border-color: #e5e7eb !important;
+            color: #1f2937 !important;
         }
 
-        .menu-scroll::-webkit-scrollbar {
-            display: none;
-        }
-
-        .menu-card {
-            flex-shrink: 0;
-            width: 120px;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #e5e5e5;
-        }
-
-        .menu-image {
-            width: 120px;
-            height: 120px;
-            background: #e5e5e5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-size: 12px;
-        }
-
-        .menu-info {
-            padding: 12px;
-        }
-
-        .menu-name {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 4px;
-            color: #1f2937;
-        }
-
-        .menu-price {
-            font-size: 14px;
-            font-weight: bold;
-            color: #1f2937;
-        }
-
-        .view-all {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            padding: 16px;
-            color: #3b82f6;
-            font-size: 14px;
-            text-decoration: none;
-        }
-
-        /* Spacer */
-        .spacer {
-            height: 100px;
-        }
-
-        /* Sticky Footer */
-        .sticky-footer {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 375px;
-            background: white;
-            padding: 16px;
-            border-top: 1px solid #e5e5e5;
-            display: flex;
-            gap: 12px;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
-        }
-
-        .ghost-btn {
-            flex: 1;
-            padding: 14px;
-            border: 1px solid #d1d5db;
-            background: white;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .primary-btn {
-            flex: 2;
-            padding: 14px;
-            background: #22c55e;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        @media (max-width: 420px) {
-            body {
-                padding: 0;
-            }
-            .device-frame {
-                border-radius: 0;
-                width: 100%;
-            }
-            .sticky-footer {
-                width: 100%;
-            }
+        .mobile-header.scrolled .header-button:hover {
+            background: #e5e7eb !important;
         }
     </style>
 </head>
-<body>
-    <div class="device-frame">
-        <!-- Header -->
-        <div class="header">
-            <button class="share-btn">공유</button>
-        </div>
+<body class="bg-gray-100 font-sans">
 
-        <!-- Hero Image -->
-        <div class="hero-image">
-            Hero Image
-        </div>
+<!-- MOBILE & DESKTOP RESPONSIVE LAYOUT -->
+<div class="min-h-screen md:p-8 lg:p-10">
+    <!-- Container: Mobile (full width) / Desktop (grid layout) -->
+    <div class="md:grid md:grid-cols-12 md:gap-8 md:max-w-screen-xl md:mx-auto">
 
-        <!-- Store Info -->
-        <div class="store-info">
-            <h1 class="store-name">카페 블루보틀</h1>
-            <div class="status-badge">
-                <span class="status-dot"></span>
-                영업중
-            </div>
-            <div class="hours">오늘 09:00 - 22:00</div>
-            <div class="address">
-                📍 서울시 강남구 테헤란로 123
-            </div>
-            <button class="detail-btn">ℹ️ 상세정보</button>
-        </div>
+        <!-- ========== LEFT PANEL (Sticky Sidebar on Desktop) ========== -->
+        <div class="md:col-span-5 md:sticky md:top-0 md:h-screen md:overflow-hidden md:rounded-2xl md:shadow-2xl">
 
-        <!-- Popular Menu Section -->
-        <div class="menu-section">
-            <h2 class="menu-section-title">인기 메뉴</h2>
-            <div class="menu-scroll">
-                <div class="menu-card">
-                    <div class="menu-image">메뉴1</div>
-                    <div class="menu-info">
-                        <div class="menu-name">아메리카노</div>
-                        <div class="menu-price">4,500원</div>
+            <!-- Hero Section -->
+            <section class="relative h-[35vh] md:h-full bg-gradient-to-br from-purple-600 to-purple-900 overflow-hidden">
+                <!-- Background Image -->
+                <img
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='600' fill='url(%23grad)'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle' opacity='0.5'%3EHero Image%3C/text%3E%3C/svg%3E"
+                        alt="카페 오더제로 매장 사진"
+                        class="absolute inset-0 w-full h-full object-cover hero-zoom"
+                />
+
+                <!-- Dark Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+
+                <!-- Desktop-only Share Button -->
+                <header class="hidden md:block absolute top-0 right-0 p-4 md:p-6 z-20">
+                    <button
+                            class="px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white text-sm font-medium hover:bg-white/30 transition"
+                            aria-label="공유하기"
+                    >
+                        공유
+                    </button>
+                </header>
+
+                <!-- Store Info (Bottom) -->
+                <div class="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 z-10">
+                    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 drop-shadow-lg">
+                        카페 오더제로
+                    </h1>
+
+                    <!-- Status Badges -->
+                    <div class="flex flex-wrap gap-2">
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/90 backdrop-blur-md rounded-full text-white text-sm font-semibold shadow-lg">
+                                <span class="w-2 h-2 bg-white rounded-full pulse-dot"></span>
+                                <span>영업중</span>
+                            </span>
+
+                        <!-- Pickup Only Badge (Conditional) -->
+                        <span class="hidden inline-flex items-center gap-2 px-3 py-1.5 bg-secondary/90 backdrop-blur-md rounded-full text-white text-sm font-semibold shadow-lg">
+                                <span>🥡</span>
+                                <span>픽업만 가능</span>
+                            </span>
                     </div>
                 </div>
-                <div class="menu-card">
-                    <div class="menu-image">메뉴2</div>
-                    <div class="menu-info">
-                        <div class="menu-name">카푸치노</div>
-                        <div class="menu-price">5,000원</div>
+
+                <!-- Store Logo Avatar (Overlapping) -->
+                <div class="absolute -bottom-8 left-4 md:left-6 w-20 h-20 md:w-24 md:h-24 bg-white rounded-full shadow-xl flex items-center justify-center text-gray-400 text-xs font-medium border-4 border-white z-30">
+                    Logo
+                </div>
+            </section>
+
+            <!-- Store Info Section (Desktop Only - Part of Sticky Sidebar) -->
+            <section class="hidden md:block bg-white p-6 lg:p-8">
+                <div class="mt-8 space-y-4">
+                    <!-- Address -->
+                    <div class="flex items-start gap-3 cursor-pointer hover:text-primary transition">
+                        <span class="text-xl">📍</span>
+                        <div>
+                            <p class="text-gray-700">서울시 강남구 테헤란로 123</p>
+                        </div>
+                    </div>
+
+                    <!-- Hours -->
+                    <div class="flex items-start gap-3 cursor-pointer hover:text-primary transition">
+                        <span class="text-xl">🕒</span>
+                        <div>
+                            <p class="text-gray-700">오늘 09:00 - 22:00</p>
+                            <p class="text-secondary text-sm font-semibold mt-1">⏳ L.O 21:30</p>
+                        </div>
                     </div>
                 </div>
-                <div class="menu-card">
-                    <div class="menu-image">메뉴3</div>
-                    <div class="menu-info">
-                        <div class="menu-name">라떼</div>
-                        <div class="menu-price">5,500원</div>
-                    </div>
-                </div>
-            </div>
-            <a href="#" class="view-all">전체 메뉴 보기 →</a>
+
+                <!-- Detail Button -->
+                <button class="mt-6 text-blue-600 text-sm font-medium hover:text-blue-700 underline flex items-center gap-1">
+                    <span>ℹ️</span>
+                    <span>매장 상세정보 더보기</span>
+                </button>
+            </section>
         </div>
 
-        <!-- Spacer for footer -->
-        <div class="spacer"></div>
+        <!-- ========== RIGHT PANEL (Scrollable Content on Desktop) ========== -->
+        <div class="md:col-span-7 md:h-screen md:overflow-y-auto custom-scrollbar md:rounded-2xl md:shadow-2xl bg-white">
 
-        <!-- Sticky Footer -->
-        <div class="sticky-footer">
-            <button class="ghost-btn">
-                📦 주문 조회
-            </button>
-            <button class="primary-btn">
-                주문하기 →
+            <!-- Right Panel Header (Desktop Only) -->
+            <header class="hidden md:flex sticky top-0 z-50 bg-white border-b border-gray-200 px-8 py-6 justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-900">메뉴</h2>
+                <button
+                        class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-full text-gray-900 text-sm font-medium hover:bg-gray-200 transition flex items-center gap-2"
+                        aria-label="주문 조회"
+                >
+                    <span>📦</span>
+                    <span>주문 조회</span>
+                </button>
+            </header>
+
+            <!-- Mobile Info Section (Directly below hero) -->
+            <section class="md:hidden bg-white pt-12 pb-6 px-4 border-b border-gray-200">
+                <div class="space-y-4">
+                    <!-- Address -->
+                    <div class="flex items-start gap-3 cursor-pointer hover:text-primary transition">
+                        <span class="text-xl">📍</span>
+                        <div>
+                            <p class="text-gray-700">서울시 강남구 테헤란로 123</p>
+                        </div>
+                    </div>
+
+                    <!-- Hours -->
+                    <div class="flex items-start gap-3 cursor-pointer hover:text-primary transition">
+                        <span class="text-xl">🕒</span>
+                        <div>
+                            <p class="text-gray-700">오늘 09:00 - 22:00</p>
+                            <p class="text-secondary text-sm font-semibold mt-1">⏳ L.O 21:30</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail Button -->
+                <button class="mt-4 text-blue-600 text-sm font-medium hover:text-blue-700 underline flex items-center gap-1">
+                    <span>ℹ️</span>
+                    <span>매장 상세정보 더보기</span>
+                </button>
+            </section>
+
+            <!-- Popular Menu Section -->
+            <section class="p-6 md:p-8 bg-gray-50">
+                <div class="mb-6">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <span>🔥</span>
+                        <span>우리 가게 인기 메뉴</span>
+                    </h3>
+                </div>
+
+                <!-- Menu Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6">
+                    <!-- Menu Card 1 -->
+                    <article class="bg-white rounded-xl shadow-sm hover:shadow-md transition cursor-pointer overflow-hidden">
+                        <div class="relative w-full pt-[100%] bg-gradient-to-br from-gray-100 to-gray-200">
+                            <img
+                                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect fill='%23f5f7fa' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3E메뉴1%3C/text%3E%3C/svg%3E"
+                                    alt="아메리카노"
+                                    class="absolute inset-0 w-full h-full object-cover"
+                            />
+                            <span class="absolute top-2 left-2 text-2xl drop-shadow-lg">🥇</span>
+                        </div>
+                        <div class="p-3 md:p-4">
+                            <h4 class="text-sm md:text-base font-semibold text-gray-900 truncate">아메리카노</h4>
+                            <p class="text-sm md:text-base font-bold text-gray-900 mt-1">4,500원</p>
+                        </div>
+                    </article>
+
+                    <!-- Menu Card 2 -->
+                    <article class="bg-white rounded-xl shadow-sm hover:shadow-md transition cursor-pointer overflow-hidden">
+                        <div class="relative w-full pt-[100%] bg-gradient-to-br from-gray-100 to-gray-200">
+                            <img
+                                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect fill='%23f5f7fa' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3E메뉴2%3C/text%3E%3C/svg%3E"
+                                    alt="카페라떼"
+                                    class="absolute inset-0 w-full h-full object-cover"
+                            />
+                            <span class="absolute top-2 left-2 text-2xl drop-shadow-lg">🥈</span>
+                        </div>
+                        <div class="p-3 md:p-4">
+                            <h4 class="text-sm md:text-base font-semibold text-gray-900 truncate">카페라떼</h4>
+                            <p class="text-sm md:text-base font-bold text-gray-900 mt-1">5,000원</p>
+                        </div>
+                    </article>
+
+                    <!-- Menu Card 3 -->
+                    <article class="bg-white rounded-xl shadow-sm hover:shadow-md transition cursor-pointer overflow-hidden">
+                        <div class="relative w-full pt-[100%] bg-gradient-to-br from-gray-100 to-gray-200">
+                            <img
+                                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect fill='%23f5f7fa' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3E메뉴3%3C/text%3E%3C/svg%3E"
+                                    alt="크로와상"
+                                    class="absolute inset-0 w-full h-full object-cover"
+                            />
+                            <span class="absolute top-2 left-2 text-2xl drop-shadow-lg">🥉</span>
+                        </div>
+                        <div class="p-3 md:p-4">
+                            <h4 class="text-sm md:text-base font-semibold text-gray-900 truncate">크로와상</h4>
+                            <p class="text-sm md:text-base font-bold text-gray-900 mt-1">5,500원</p>
+                        </div>
+                    </article>
+
+                    <!-- Menu Card 4 (Desktop Only) -->
+                    <article class="hidden md:block bg-white rounded-xl shadow-sm hover:shadow-md transition cursor-pointer overflow-hidden">
+                        <div class="relative w-full pt-[100%] bg-gradient-to-br from-gray-100 to-gray-200">
+                            <img
+                                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect fill='%23f5f7fa' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3E메뉴4%3C/text%3E%3C/svg%3E"
+                                    alt="카라멜 마끼아또"
+                                    class="absolute inset-0 w-full h-full object-cover"
+                            />
+                        </div>
+                        <div class="p-3 md:p-4">
+                            <h4 class="text-sm md:text-base font-semibold text-gray-900 truncate">카라멜 마끼아또</h4>
+                            <p class="text-sm md:text-base font-bold text-gray-900 mt-1">5,800원</p>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- View All Link -->
+                <a href="#" class="flex items-center justify-center gap-2 mt-6 text-blue-600 text-sm font-medium hover:text-blue-700 transition">
+                    <span>전체 메뉴 보기</span>
+                    <span>→</span>
+                </a>
+            </section>
+
+            <!-- Dummy Content for Scroll Demo (Desktop) -->
+            <div class="hidden md:block space-y-6 p-8 bg-white border-t border-gray-200">
+                <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">☕ 전체 메뉴</h3>
+                    <p class="text-gray-600 leading-relaxed mb-3">이 영역에는 전체 메뉴 목록이 표시됩니다. 스크롤 효과를 확인하기 위한 더미 콘텐츠입니다.</p>
+                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                        <li>커피 메뉴 (에스프레소, 아메리카노, 라떼 등)</li>
+                        <li>디저트 (크로와상, 케이크, 마카롱 등)</li>
+                        <li>브런치 (샌드위치, 샐러드, 파스타 등)</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">🎯 카테고리별 메뉴</h3>
+                    <p class="text-gray-600 leading-relaxed">커피, 디저트, 브런치 등 카테고리별로 메뉴를 구분하여 표시할 수 있습니다.</p>
+                </div>
+
+                <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">🏪 매장 소개</h3>
+                    <p class="text-gray-600 leading-relaxed">매장의 특별한 이야기, 인테리어, 시그니처 메뉴 등을 소개하는 섹션입니다.</p>
+                </div>
+
+                <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">⭐ 고객 리뷰</h3>
+                    <p class="text-gray-600 leading-relaxed">고객 리뷰와 평점을 확인할 수 있습니다. 평균 평점: 4.8/5.0</p>
+                </div>
+
+                <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">📍 매장 위치</h3>
+                    <p class="text-gray-600 leading-relaxed">지도를 통해 매장 위치를 상세히 확인할 수 있습니다.</p>
+                </div>
+            </div>
+
+            <!-- Desktop Footer Spacer -->
+            <div class="hidden md:block h-24"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== MOBILE HEADER (Fixed, Scroll-reactive) ========== -->
+<header id="mobileHeader" class="md:hidden mobile-header fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center">
+    <!-- Order Lookup Button -->
+    <button
+            class="header-button px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white text-sm font-medium hover:bg-white/30 transition flex items-center gap-2"
+            aria-label="주문 조회"
+    >
+        <span>📦</span>
+        <span>주문 조회</span>
+    </button>
+
+    <!-- Share Button -->
+    <button
+            class="header-button px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white text-sm font-medium hover:bg-white/30 transition"
+            aria-label="공유하기"
+    >
+        공유
+    </button>
+</header>
+
+<!-- ========== STICKY FOOTER (Mobile & Desktop) ========== -->
+<footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50 p-4 md:p-6">
+    <div class="max-w-screen-xl mx-auto md:grid md:grid-cols-12 md:gap-8">
+        <!-- Empty space for left panel on desktop -->
+        <div class="hidden md:block md:col-span-5"></div>
+
+        <!-- Footer content aligned with right panel -->
+        <div class="md:col-span-7">
+            <button class="w-full md:max-w-md md:ml-auto px-6 py-4 bg-primary hover:bg-primary-hover active:scale-95 disabled:bg-primary-disabled text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base md:text-lg">
+                <span>주문하기</span>
+                <span>→</span>
             </button>
         </div>
     </div>
+</footer>
+
+<!-- Spacer for Mobile Footer -->
+<div class="h-20 md:hidden"></div>
+
+<!-- JavaScript -->
+<script>
+    // Mock Store Data
+    const store = {
+        name: "카페 오더제로",
+        status: "open",
+        dine_in_enabled: false,
+        opening_hours: { start: "09:00", end: "22:00" },
+        last_order_time: "21:30",
+        address: "서울시 강남구 테헤란로 123"
+    };
+
+    // Mobile Header Scroll Effect
+    const mobileHeader = document.getElementById('mobileHeader');
+    const heroHeight = window.innerHeight * 0.35; // 35vh
+
+    let lastScrollY = 0;
+    let ticking = false;
+
+    function updateHeader() {
+        const scrollY = window.scrollY;
+
+        if (scrollY > heroHeight - 60) {
+            mobileHeader.classList.add('scrolled');
+        } else {
+            mobileHeader.classList.remove('scrolled');
+        }
+
+        lastScrollY = scrollY;
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(updateHeader);
+            ticking = true;
+        }
+    });
+
+    // Initial check
+    updateHeader();
+
+    console.log('Store Profile Loaded:', store.name);
+</script>
 </body>
 </html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Zero - User Flow</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 24px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 28px;
+            color: #f8fafc;
+        }
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 32px;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .tab.mvp { background: #064e3b; color: #10b981; }
+        .tab.mvp.active, .tab.mvp:hover { background: #10b981; color: #064e3b; }
+        .tab.v11 { background: #78350f; color: #fbbf24; }
+        .tab.v11.active, .tab.v11:hover { background: #fbbf24; color: #78350f; }
+        .tab.phase2 { background: #581c87; color: #a855f7; }
+        .tab.phase2.active, .tab.phase2:hover { background: #a855f7; color: #581c87; }
+        .flow-container {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .flow-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .badge {
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge.mvp { background: #10b981; color: #064e3b; }
+        .badge.v11 { background: #fbbf24; color: #78350f; }
+        .badge.phase2 { background: #a855f7; color: #581c87; }
+        .mermaid {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 24px;
+            overflow-x: auto;
+        }
+        .hidden { display: none; }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .legend-dot.mvp { background: #10b981; }
+        .legend-dot.v11 { background: #fbbf24; }
+        .legend-dot.phase2 { background: #a855f7; }
+    </style>
+</head>
+<body>
+    <h1>📍 Order Zero User Flow</h1>
+    <p class="subtitle">User Story 기반 사용자 여정 플로우</p>
+
+    <div class="tabs">
+        <button class="tab mvp active" onclick="showFlow('all')">전체 보기</button>
+        <button class="tab mvp" onclick="showFlow('flow1')">Flow 1: 검색 유입</button>
+        <button class="tab mvp" onclick="showFlow('flow2')">Flow 2: SNS 유입</button>
+        <button class="tab v11" onclick="showFlow('flow3')">Flow 3: 테이블 오더</button>
+        <button class="tab phase2" onclick="showFlow('flow4')">Flow 4: 단골 재주문</button>
+    </div>
+
+    <!-- Flow 1 -->
+    <div id="flow1" class="flow-container">
+        <div class="flow-title">
+            <span class="badge mvp">MVP</span>
+            Flow 1: 검색 유입 → 매장 이용 주문
+        </div>
+        <div class="mermaid">
+flowchart LR
+    A[🔍 네이버/카카오맵<br/>검색] --> B[C-01<br/>매장 프로필]
+    B --> C[C-02<br/>주문 유형]
+    C -->|매장 이용| D[C-03<br/>좌석 현황]
+    D --> E[C-04<br/>메뉴 목록]
+    E --> F[C-05<br/>메뉴 상세]
+    F --> G[C-06<br/>장바구니]
+    G --> H[C-07<br/>주문 확인]
+    H --> I[C-08<br/>결제]
+    I --> J[C-09<br/>주문 완료]
+    J --> K[C-10<br/>픽업 알림]
+    
+    style A fill:#10b981,color:#064e3b
+    style K fill:#10b981,color:#064e3b
+        </div>
+    </div>
+
+    <!-- Flow 2 -->
+    <div id="flow2" class="flow-container">
+        <div class="flow-title">
+            <span class="badge mvp">MVP</span>
+            Flow 2: SNS 유입 → 픽업 주문
+        </div>
+        <div class="mermaid">
+flowchart LR
+    A[📱 SNS 링크<br/>클릭] --> B[C-02<br/>주문 유형]
+    B -->|픽업| C[C-04<br/>메뉴 목록]
+    C --> D[C-05<br/>메뉴 상세]
+    D --> E[C-06<br/>장바구니]
+    E --> F[C-07<br/>주문 확인]
+    F --> G[C-08<br/>결제]
+    G --> H[C-09<br/>주문 완료]
+    H --> I[C-10<br/>픽업 알림]
+    
+    style A fill:#10b981,color:#064e3b
+    style I fill:#10b981,color:#064e3b
+        </div>
+    </div>
+
+    <!-- Flow 3 -->
+    <div id="flow3" class="flow-container">
+        <div class="flow-title">
+            <span class="badge v11">v1.1</span>
+            Flow 3: 테이블 오더
+        </div>
+        <div class="mermaid">
+flowchart LR
+    A[📷 QR 스캔] --> B[C-11<br/>테이블 오더]
+    B --> C[C-04<br/>메뉴 목록]
+    C --> D[C-05<br/>메뉴 상세]
+    D --> E[C-06<br/>장바구니]
+    E --> F{결제 방식}
+    F -->|선결제| G[C-08<br/>결제]
+    G --> H[주문 완료]
+    F -->|후결제| I[주문 접수]
+    H --> J{추가 주문?}
+    I --> J
+    J -->|예| C
+    J -->|아니오| K[완료]
+    
+    style A fill:#fbbf24,color:#78350f
+    style K fill:#fbbf24,color:#78350f
+        </div>
+    </div>
+
+    <!-- Flow 4 -->
+    <div id="flow4" class="flow-container">
+        <div class="flow-title">
+            <span class="badge phase2">Phase 2</span>
+            Flow 4: 단골 고객 재주문
+        </div>
+        <div class="mermaid">
+flowchart LR
+    A[⭐ 즐겨찾기] --> B[C-13<br/>로그인]
+    B --> C[최근 주문<br/>다시 담기]
+    C --> D[C-06<br/>장바구니]
+    D --> E[C-08<br/>결제]
+    E --> F[주문 완료]
+    F --> G[스탬프 적립]
+    
+    style A fill:#a855f7,color:#581c87
+    style G fill:#a855f7,color:#581c87
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-dot mvp"></div>
+            <span>MVP (18화면)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot v11"></div>
+            <span>v1.1 테이블 오더 (+4화면)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot phase2"></div>
+            <span>Phase 2 단골 시스템 (+7화면)</span>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'dark',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        function showFlow(flowId) {
+            const containers = document.querySelectorAll('.flow-container');
+            const tabs = document.querySelectorAll('.tab');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            if (flowId === 'all') {
+                containers.forEach(c => c.classList.remove('hidden'));
+                document.querySelector('.tab.mvp').classList.add('active');
+            } else {
+                containers.forEach(c => c.classList.add('hidden'));
+                document.getElementById(flowId).classList.remove('hidden');
+                event.target.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
