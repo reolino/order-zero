@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-10: 주문 완료 - Order Zero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        'primary-dark': '#1d4ed8',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Bounce Animation */
+        @keyframes bounce-once {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .animate-bounce-once {
+            animation: bounce-once 0.6s ease-out;
+        }
+
+        /* Check Icon Draw Animation */
+        @keyframes draw-check {
+            0% { stroke-dashoffset: 50; }
+            100% { stroke-dashoffset: 0; }
+        }
+        .animate-check {
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+            animation: draw-check 0.5s ease-out 0.3s forwards;
+        }
+
+        /* Fade In Up Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+
+        /* Progress Line Animation */
+        @keyframes progress-line {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        .animate-progress-line {
+            animation: progress-line 0.8s ease-out 0.5s forwards;
+        }
+
+        /* ============================================ */
+        /* 1. Status Pulse - 심장 박동 효과 💓 */
+        /* ============================================ */
+        @keyframes heartbeat {
+            0%, 100% { 
+                transform: scale(1); 
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+            }
+            25% { 
+                transform: scale(1.05); 
+                box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.2);
+            }
+            50% { 
+                transform: scale(1); 
+                box-shadow: 0 0 0 12px rgba(37, 99, 235, 0);
+            }
+            75% { 
+                transform: scale(1.03); 
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+            }
+        }
+        .animate-heartbeat {
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        /* ============================================ */
+        /* 2. Confetti Replay - 클릭 시 바운스 🎉 */
+        /* ============================================ */
+        @keyframes confetti-bounce {
+            0%, 100% { transform: scale(1); }
+            30% { transform: scale(0.9); }
+            60% { transform: scale(1.1); }
+        }
+        .animate-confetti-bounce {
+            animation: confetti-bounce 0.5s ease-out;
+        }
+
+        /* ============================================ */
+        /* 3. Toast Notification 📋 */
+        /* ============================================ */
+        @keyframes toast-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes toast-out {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+        .toast-enter {
+            animation: toast-in 0.3s ease-out forwards;
+        }
+        .toast-exit {
+            animation: toast-out 0.3s ease-out forwards;
+        }
+
+        /* Order Number Hover Effect */
+        .order-number-clickable {
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .order-number-clickable:hover {
+            color: #1d4ed8;
+        }
+        .order-number-clickable:active {
+            transform: scale(0.95);
+        }
+
+        /* Success Icon Clickable */
+        .success-icon-clickable {
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+        .success-icon-clickable:hover {
+            transform: scale(1.05);
+        }
+        .success-icon-clickable:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none"></div>
+
+<!-- 
+    Responsive Layout:
+    - Mobile (< 640px): Full width, no border
+    - Tablet (640px ~ 1023px): Centered card, max-w-lg
+    - Desktop (≥ 1024px): Two-column layout with side info
+-->
+<div class="min-h-screen flex flex-col lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:p-8">
+    
+    <!-- Main Card -->
+    <div class="w-full sm:max-w-lg lg:max-w-md xl:max-w-lg mx-auto bg-white sm:my-4 sm:rounded-2xl sm:shadow-xl lg:my-0 overflow-hidden">
+        
+        <!-- Header -->
+        <header class="h-12 sm:h-14 flex items-center justify-end px-4 bg-white relative z-10 sticky top-0">
+            <button class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center transition-colors">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </header>
+
+        <!-- ========================================== -->
+        <!-- Phase 1: Hero Section (Visual Impact) -->
+        <!-- ========================================== -->
+        <section class="bg-gradient-to-br from-blue-50 to-green-50 pt-6 sm:pt-8 lg:pt-10 pb-10 sm:pb-12 px-4 sm:px-6 lg:px-8 text-center">
+            
+            <!-- ✨ 2. Confetti Replay: 클릭 가능한 Success Icon -->
+            <div 
+                id="successIcon"
+                onclick="triggerConfetti()"
+                class="success-icon-clickable animate-bounce-once inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-green-500 rounded-full shadow-lg shadow-green-200 mb-4 sm:mb-6"
+                title="클릭하면 폭죽이 터져요! 🎉"
+            >
+                <svg class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path class="animate-check" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+
+            <!-- Success Title -->
+            <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 animate-fade-in-up" style="opacity: 0;">
+                주문 접수 완료!
+            </h1>
+
+            <!-- ✨ 3. Copy Order Number: 클릭 시 복사 + 토스트 -->
+            <div class="mt-4 sm:mt-6 animate-fade-in-up delay-100" style="opacity: 0;">
+                <p class="text-xs sm:text-sm lg:text-base text-gray-500 mb-1 sm:mb-2">주문번호</p>
+                <div class="flex items-center justify-center gap-2 sm:gap-3">
+                    <span 
+                        id="orderNumber"
+                        onclick="copyOrderNumber()"
+                        class="order-number-clickable text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-primary tracking-wider select-none"
+                        title="클릭하여 복사"
+                    >
+                        A-123
+                    </span>
+                    <button 
+                        id="copyBtn" 
+                        onclick="copyOrderNumber()"
+                        class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-white rounded-lg shadow-md flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all"
+                        title="주문번호 복사"
+                    >
+                        <svg id="copyIcon" class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-[10px] sm:text-xs text-gray-400 mt-2">👆 번호를 터치하면 복사돼요</p>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- Phase 2: Progress Tracker (Crucial) -->
+        <!-- ========================================== -->
+        <section class="px-4 sm:px-6 lg:px-8 -mt-5 sm:-mt-6 relative z-10 animate-fade-in-up delay-200" style="opacity: 0;">
+            <div class="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
+                <!-- Progress Steps -->
+                <div class="flex items-center justify-between mb-3 sm:mb-4 lg:mb-6">
+                    
+                    <!-- ✨ 1. Status Pulse: Step 1 심장박동 효과 💓 -->
+                    <div class="flex flex-col items-center flex-shrink-0">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-primary rounded-full flex items-center justify-center shadow-md shadow-blue-200 animate-heartbeat">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <span class="mt-1.5 sm:mt-2 text-xs sm:text-sm lg:text-base font-semibold text-primary">접수</span>
+                    </div>
+
+                    <!-- Line 1 -->
+                    <div class="flex-1 h-0.5 sm:h-1 bg-gray-200 mx-1.5 sm:mx-2 lg:mx-4 rounded-full overflow-hidden">
+                        <div class="h-full bg-gray-300 w-0 animate-progress-line"></div>
+                    </div>
+
+                    <!-- Step 2: 제조 (Inactive) -->
+                    <div class="flex flex-col items-center flex-shrink-0">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gray-200 rounded-full flex items-center justify-center">
+                            <span class="text-gray-500 font-bold text-sm sm:text-base lg:text-lg">2</span>
+                        </div>
+                        <span class="mt-1.5 sm:mt-2 text-xs sm:text-sm lg:text-base font-medium text-gray-400">제조</span>
+                    </div>
+
+                    <!-- Line 2 -->
+                    <div class="flex-1 h-0.5 sm:h-1 bg-gray-200 mx-1.5 sm:mx-2 lg:mx-4 rounded-full"></div>
+
+                    <!-- Step 3: 픽업 (Inactive) -->
+                    <div class="flex flex-col items-center flex-shrink-0">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gray-200 rounded-full flex items-center justify-center">
+                            <span class="text-gray-500 font-bold text-sm sm:text-base lg:text-lg">3</span>
+                        </div>
+                        <span class="mt-1.5 sm:mt-2 text-xs sm:text-sm lg:text-base font-medium text-gray-400">픽업</span>
+                    </div>
+                </div>
+
+                <!-- Status Message -->
+                <p class="text-center text-gray-600 text-xs sm:text-sm lg:text-base font-medium">
+                    매장에서 주문을 확인하고 있습니다.
+                </p>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- Phase 3: Time Estimation Card -->
+        <!-- ========================================== -->
+        <section class="px-4 sm:px-6 lg:px-8 mt-3 sm:mt-4 lg:mt-6 animate-fade-in-up delay-300" style="opacity: 0;">
+            <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-3 sm:p-4 lg:p-5 flex items-center gap-3 sm:gap-4">
+                <!-- Clock SVG Icon -->
+                <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs sm:text-sm lg:text-base text-amber-700 font-medium">예상 대기 시간</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold text-amber-900">약 10~15분</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- Phase 4: Compact Order Summary -->
+        <!-- ========================================== -->
+        <section class="px-4 sm:px-6 lg:px-8 mt-3 sm:mt-4 lg:mt-6 animate-fade-in-up delay-400" style="opacity: 0;">
+            <div class="bg-gray-50 rounded-xl p-3 sm:p-4 lg:p-5">
+                <!-- Header: Store + Badge -->
+                <div class="flex items-center justify-between mb-2 sm:mb-3">
+                    <span class="font-semibold text-gray-800 text-sm sm:text-base lg:text-lg">카페 블루문</span>
+                    <span class="px-2 py-0.5 sm:py-1 bg-primary/10 text-primary text-[10px] sm:text-xs lg:text-sm font-semibold rounded-full">
+                        픽업 주문
+                    </span>
+                </div>
+                
+                <!-- Body: Summary -->
+                <p class="text-gray-600 text-xs sm:text-sm lg:text-base mb-2 sm:mb-3">
+                    아메리카노 외 2건
+                </p>
+                
+                <!-- Footer: Total -->
+                <div class="flex items-center justify-between pt-2 sm:pt-3 border-t border-gray-200">
+                    <span class="text-xs sm:text-sm lg:text-base text-gray-500">결제 금액</span>
+                    <span class="text-base sm:text-lg lg:text-xl font-bold text-gray-900">12,500원</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- Phase 5: Notification (Simplified) -->
+        <!-- ========================================== -->
+        <section class="px-4 sm:px-6 lg:px-8 mt-3 sm:mt-4 lg:mt-6 animate-fade-in-up delay-500" style="opacity: 0;">
+            <div class="bg-blue-50 p-2.5 sm:p-3 lg:p-4 rounded-lg flex items-center gap-2 sm:gap-3">
+                <!-- Bell SVG Icon -->
+                <div class="w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                </div>
+                <p class="text-xs sm:text-sm lg:text-base text-blue-800">
+                    제조 완료 시 <strong>카카오톡/문자</strong>로 알려드려요.
+                </p>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- Phase 6: Footer Actions -->
+        <!-- ========================================== -->
+        <section class="px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8 pb-6 sm:pb-8 space-y-2 sm:space-y-3">
+            <button class="w-full h-11 sm:h-12 lg:h-14 bg-primary hover:bg-primary-dark active:bg-blue-800 text-white font-semibold rounded-xl transition-colors shadow-md shadow-blue-200 text-sm sm:text-base lg:text-lg">
+                홈으로
+            </button>
+            <button class="w-full h-11 sm:h-12 lg:h-14 bg-white border-2 border-gray-200 hover:border-gray-300 active:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-colors text-sm sm:text-base lg:text-lg">
+                주문 상세보기
+            </button>
+        </section>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Desktop Side Panel (lg+) -->
+    <!-- ========================================== -->
+    <aside class="hidden lg:block w-80 xl:w-96 bg-white rounded-2xl shadow-xl p-6 xl:p-8">
+        <h2 class="text-lg xl:text-xl font-bold text-gray-900 mb-4 xl:mb-6">주문 안내</h2>
+        
+        <!-- Info Items -->
+        <div class="space-y-4 xl:space-y-5">
+            <!-- Item 1 -->
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-900 text-sm xl:text-base">주문이 접수되었습니다</p>
+                    <p class="text-gray-500 text-xs xl:text-sm mt-0.5">매장에서 확인 중입니다.</p>
+                </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-900 text-sm xl:text-base">알림을 받으세요</p>
+                    <p class="text-gray-500 text-xs xl:text-sm mt-0.5">제조 완료 시 알림이 발송됩니다.</p>
+                </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-900 text-sm xl:text-base">픽업 장소</p>
+                    <p class="text-gray-500 text-xs xl:text-sm mt-0.5">카페 블루문 카운터</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="my-5 xl:my-6 border-gray-200">
+
+        <!-- QR Code Placeholder -->
+        <div class="text-center">
+            <p class="text-sm text-gray-600 mb-3">매장 QR 코드</p>
+            <div class="w-32 h-32 xl:w-40 xl:h-40 mx-auto bg-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-300">
+                <svg class="w-12 h-12 xl:w-16 xl:h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                </svg>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">픽업 시 스캔하세요</p>
+        </div>
+
+        <!-- Interaction Hints -->
+        <div class="mt-6 p-3 bg-gray-50 rounded-lg">
+            <p class="text-xs text-gray-500 text-center">
+                💡 <strong>Tip:</strong> 체크 아이콘을 누르면 폭죽이 터져요!
+            </p>
+        </div>
+    </aside>
+</div>
+
+<script>
+    // ============================================
+    // Trigger animations on page load
+    // ============================================
+    document.addEventListener('DOMContentLoaded', () => {
+        const animatedElements = document.querySelectorAll('.animate-fade-in-up');
+        animatedElements.forEach(el => {
+            el.style.opacity = '1';
+        });
+
+        // 페이지 로드 시 자동으로 폭죽 터뜨리기
+        setTimeout(() => {
+            triggerConfetti();
+        }, 800);
+    });
+
+    // ============================================
+    // 2. Confetti Replay 🎉
+    // ============================================
+    function triggerConfetti() {
+        const successIcon = document.getElementById('successIcon');
+        
+        // 바운스 애니메이션 재생
+        successIcon.classList.remove('animate-confetti-bounce');
+        void successIcon.offsetWidth; // Reflow 트리거
+        successIcon.classList.add('animate-confetti-bounce');
+
+        // 폭죽 효과
+        const duration = 600;
+        const end = Date.now() + duration;
+
+        // 왼쪽에서 터지는 폭죽
+        confetti({
+            particleCount: 50,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0, y: 0.6 },
+            colors: ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6']
+        });
+
+        // 오른쪽에서 터지는 폭죽
+        confetti({
+            particleCount: 50,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1, y: 0.6 },
+            colors: ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6']
+        });
+
+        // 가운데 위에서 터지는 폭죽
+        setTimeout(() => {
+            confetti({
+                particleCount: 80,
+                spread: 100,
+                origin: { x: 0.5, y: 0.3 },
+                colors: ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6']
+            });
+        }, 150);
+    }
+
+    // ============================================
+    // 3. Copy Order Number 📋
+    // ============================================
+    function copyOrderNumber() {
+        const orderNumber = 'A-123';
+        
+        navigator.clipboard.writeText(orderNumber).then(() => {
+            // 복사 아이콘 변경 (체크 표시)
+            const copyIcon = document.getElementById('copyIcon');
+            copyIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>';
+            copyIcon.classList.remove('text-gray-500');
+            copyIcon.classList.add('text-green-500');
+
+            // 토스트 메시지 표시
+            showToast('주문번호가 복사되었어요! 📋', 'success');
+
+            // 2초 후 원래 아이콘으로 복원
+            setTimeout(() => {
+                copyIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>';
+                copyIcon.classList.remove('text-green-500');
+                copyIcon.classList.add('text-gray-500');
+            }, 2000);
+        }).catch(() => {
+            showToast('복사에 실패했어요 😢', 'error');
+        });
+    }
+
+    // ============================================
+    // Toast Notification System
+    // ============================================
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        
+        // 토스트 요소 생성
+        const toast = document.createElement('div');
+        toast.className = `
+            toast-enter
+            px-4 py-3 rounded-xl shadow-lg
+            flex items-center gap-2
+            text-sm font-medium
+            ${type === 'success' 
+                ? 'bg-green-500 text-white' 
+                : 'bg-red-500 text-white'
+            }
+        `;
+        
+        // 아이콘 + 메시지
+        toast.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                ${type === 'success' 
+                    ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+                    : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+                }
+            </svg>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+
+        // 2.5초 후 사라지기
+        setTimeout(() => {
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 2500);
+    }
+</script>
+
+</body>
+</html>

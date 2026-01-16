@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-06: 장바구니 (Final Polish) - Order Zero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ⭐ Enhanced Soft Delete Animation */
+        .removing {
+            opacity: 0;
+            transform: translateX(-20px);
+            max-height: 0;
+            margin-bottom: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            overflow: hidden;
+            transition: all 0.3s ease-out;
+        }
+
+        /* Toast Animation */
+        .toast-enter {
+            animation: toastEnter 0.3s ease-out forwards;
+        }
+
+        .toast-exit {
+            animation: toastExit 0.3s ease-out forwards;
+        }
+
+        @keyframes toastEnter {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes toastExit {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+
+        /* Wireframe container for demo purposes */
+        .wireframe-container {
+            max-width: 375px;
+            margin: 0 auto;
+            border: 2px solid #333;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        @media (min-width: 768px) {
+            .wireframe-container {
+                max-width: 1200px;
+                border: none;
+                box-shadow: none;
+            }
+        }
+
+        /* Desktop sticky sidebar */
+        @media (min-width: 768px) {
+            .sticky-sidebar {
+                position: sticky;
+                top: 6rem;
+                max-height: calc(100vh - 8rem);
+            }
+        }
+
+        /* Custom scrollbar for cart items on desktop */
+        @media (min-width: 768px) {
+            .cart-scroll::-webkit-scrollbar {
+                width: 8px;
+            }
+            .cart-scroll::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 4px;
+            }
+            .cart-scroll::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 4px;
+            }
+            .cart-scroll::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a73e8',
+                        accent: '#ff6b35',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Screen Label (Demo Only) -->
+    <div class="text-center py-4 text-sm text-gray-600 font-semibold">
+        C-06: 장바구니 (Final Polish: Undo Toast + Enhanced Animations) ✨
+    </div>
+
+    <!-- Main Container -->
+    <div class="wireframe-container bg-white">
+        <!-- Header -->
+        <header class="sticky top-0 z-10 bg-white border-b border-gray-300 px-4 h-14 flex items-center justify-between">
+            <!-- Back Button -->
+            <button onclick="window.location.href='c04.html'" class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
+                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            
+            <!-- Title -->
+            <h1 class="text-base font-semibold text-gray-900">장바구니</h1>
+            
+            <!-- Delete All Button -->
+            <button onclick="clearCart()" class="text-sm text-gray-600 hover:text-accent transition">
+                전체삭제
+            </button>
+        </header>
+
+        <!-- ⭐ Order Type Indicator -->
+        <div class="bg-blue-50 border-b border-blue-200 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">🛍️</span>
+                <span class="text-sm text-gray-900">
+                    Ordering for <strong class="text-primary font-bold">Pickup</strong> 
+                    <span class="text-gray-500">(Approx. 15 mins)</span>
+                </span>
+            </div>
+            <a href="P1-02.html" class="text-sm text-primary hover:underline">Change ›</a>
+        </div>
+
+        <!-- Store Info -->
+        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
+            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+            <span class="text-sm font-semibold text-gray-900">카페 블루문</span>
+        </div>
+
+        <!-- Main Content Area: Responsive Grid -->
+        <div class="p-4 md:p-8 md:grid md:grid-cols-12 md:gap-8 pb-32 md:pb-8">
+            <!-- Left Column: Cart Items (Mobile: full width, Desktop: 8 cols) -->
+            <div class="md:col-span-8" id="leftColumn">
+                <!-- Cart Container -->
+                <div id="cartContainer">
+                    <!-- Cart Items List - ⭐ Enhanced pb-32 for scroll padding -->
+                    <div class="space-y-3 mb-4 cart-scroll pb-4" id="cartItemsList">
+                        <!-- Item 1 -->
+                        <div class="cart-item bg-white border border-gray-200 rounded-lg p-3 transition-all" 
+                             data-id="1" 
+                             data-price="5500"
+                             data-name="아메리카노"
+                             data-options="HOT · M · 샷 추가"
+                             data-qty="2">
+                            <div class="flex gap-3 mb-3">
+                                <!-- Image -->
+                                <div class="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center text-xs text-gray-400">
+                                    IMAGE
+                                </div>
+                                
+                                <!-- Info -->
+                                <div class="flex-1">
+                                    <h3 class="text-base font-semibold text-gray-900">아메리카노</h3>
+                                    <p class="text-sm text-gray-500">HOT · M · 샷 추가</p>
+                                    <p class="text-base font-semibold text-gray-900 mt-1">5,500원</p>
+                                </div>
+                                
+                                <!-- Delete Button -->
+                                <button onclick="removeItem(1)" class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-100 transition flex-shrink-0">
+                                    <svg class="w-4 h-4 text-gray-600 hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <!-- Quantity Controls -->
+                            <div class="flex items-center gap-3 pt-3 border-t border-gray-100">
+                                <button onclick="updateQuantity(1, -1)" class="w-7 h-7 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-900 hover:bg-gray-50 transition">
+                                    <span class="text-base">−</span>
+                                </button>
+                                <span class="qty-value text-base font-semibold text-gray-900 min-w-6 text-center">2</span>
+                                <button onclick="updateQuantity(1, 1)" class="w-7 h-7 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-900 hover:bg-gray-50 transition">
+                                    <span class="text-base">+</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="cart-item bg-white border border-gray-200 rounded-lg p-3 transition-all" 
+                             data-id="2" 
+                             data-price="6000"
+                             data-name="카페라떼"
+                             data-options="ICED · L"
+                             data-qty="1">
+                            <div class="flex gap-3 mb-3">
+                                <div class="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center text-xs text-gray-400">
+                                    IMAGE
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-base font-semibold text-gray-900">카페라떼</h3>
+                                    <p class="text-sm text-gray-500">ICED · L</p>
+                                    <p class="text-base font-semibold text-gray-900 mt-1">6,000원</p>
+                                </div>
+                                <button onclick="removeItem(2)" class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-100 transition flex-shrink-0">
+                                    <svg class="w-4 h-4 text-gray-600 hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-3 pt-3 border-t border-gray-100">
+                                <button onclick="updateQuantity(2, -1)" class="w-7 h-7 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-900 hover:bg-gray-50 transition">
+                                    <span class="text-base">−</span>
+                                </button>
+                                <span class="qty-value text-base font-semibold text-gray-900 min-w-6 text-center">1</span>
+                                <button onclick="updateQuantity(2, 1)" class="w-7 h-7 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-900 hover:bg-gray-50 transition">
+                                    <span class="text-base">+</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Item 3 -->
+                        <div class="cart-item bg-white border border-gray-200 rounded-lg p-3 transition-all" 
+                             data-id="3" 
+                             data-price="3500"
+                             data-name="크로와상"
+                             data-options="-"
+                             data-qty="1">
+                            <div class="flex gap-3 mb-3">
+                                <div class="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center text-xs text-gray-400">
+                                    IMAGE
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-base font-semibold text-gray-900">크로와상</h3>
+                                    <p class="text-sm text-gray-500">-</p>
+                                    <p class="text-base font-semibold text-gray-900 mt-1">3,500원</p>
+                                </div>
+                                <button onclick="removeItem(3)" class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-100 transition flex-shrink-0">
+                                    <svg class="w-4 h-4 text-gray-600 hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-3 pt-3 border-t border-gray-100">
+                                <button onclick="updateQuantity(3, -1)" class="w-7 h-7 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-900 hover:bg-gray-50 transition">
+                                    <span class="text-base">−</span>
+                                </button>
+                                <span class="qty-value text-base font-semibold text-gray-900 min-w-6 text-center">1</span>
+                                <button onclick="updateQuantity(3, 1)" class="w-7 h-7 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-900 hover:bg-gray-50 transition">
+                                    <span class="text-base">+</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ⭐ Add More Menu Button -->
+                    <button onclick="window.location.href='c04.html'" class="w-full py-3.5 bg-white border-2 border-dashed border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:border-gray-900 hover:text-gray-900 hover:bg-gray-50 transition mb-5 md:mb-0">
+                        + Add More Menu
+                    </button>
+                </div>
+
+                <!-- ⭐ Empty State (Initially Hidden) -->
+                <div class="hidden flex-col items-center justify-center py-20 text-center" id="emptyState">
+                    <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-5">
+                        <span class="text-5xl opacity-50">🛒</span>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-900 mb-2">Your cart is empty</h2>
+                    <p class="text-sm text-gray-500 mb-8">맛있는 메뉴를 담아보세요</p>
+                    <button onclick="window.location.href='c04.html'" class="px-8 py-3.5 bg-gray-900 text-white rounded-lg text-base font-semibold hover:bg-gray-700 transition">
+                        Go to Order
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Price Summary (Mobile: full width, Desktop: 4 cols + sticky) -->
+            <div class="md:col-span-4">
+                <div class="sticky-sidebar md:border md:border-gray-200 md:rounded-xl md:shadow-sm md:p-6 md:bg-white" id="rightColumn">
+                    <!-- Payment Summary -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4 md:bg-transparent md:p-0">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-sm text-gray-500">주문금액</span>
+                            <span class="text-sm text-gray-600" id="subtotal">20,500원</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-sm text-gray-500">할인</span>
+                            <span class="text-sm text-accent" id="discount">-500원</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-3 border-t-2 border-gray-200">
+                            <span class="text-base font-bold text-gray-900">총 결제금액</span>
+                            <span class="text-2xl font-black text-primary" id="total">20,000원</span>
+                        </div>
+                    </div>
+
+                    <!-- Checkout Button - Desktop Only -->
+                    <button onclick="checkout()" id="checkoutBtn" class="hidden md:block w-full py-3.5 bg-gray-900 text-white rounded-lg text-base font-semibold hover:bg-gray-700 transition">
+                        20,000원 결제하기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Bottom Bar (Hidden on Desktop) -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 p-4 md:hidden z-10" id="mobileBottomBar">
+            <button onclick="checkout()" id="mobileCheckoutBtn" class="w-full py-3.5 bg-gray-900 text-white rounded-lg text-base font-semibold hover:bg-gray-700 transition">
+                20,000원 결제하기
+            </button>
+        </div>
+
+        <!-- ⭐ Undo Toast (Google Style) -->
+        <div id="undoToast" class="hidden fixed bottom-20 left-4 right-4 md:left-auto md:right-8 md:bottom-8 md:w-96 bg-gray-900 text-white px-4 py-3 rounded-lg shadow-lg z-50">
+            <div class="flex items-center justify-between">
+                <span class="text-sm" id="toastMessage">Item deleted.</span>
+                <button onclick="undoDelete()" class="ml-4 text-sm font-semibold text-blue-400 hover:text-blue-300 transition">
+                    UNDO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⭐ Global state for Undo functionality
+        let deletedItem = null;
+        let undoTimer = null;
+        let deletedItemParent = null;
+        let deletedItemNextSibling = null;
+
+        // Cart management functions
+        function updateQuantity(itemId, delta) {
+            const item = document.querySelector(`.cart-item[data-id="${itemId}"]`);
+            const qtyElement = item.querySelector('.qty-value');
+            let currentQty = parseInt(qtyElement.textContent);
+            
+            currentQty += delta;
+            
+            if (currentQty <= 0) {
+                removeItem(itemId);
+                return;
+            }
+            
+            qtyElement.textContent = currentQty;
+            item.dataset.qty = currentQty;
+            calculateTotal();
+        }
+
+        // ⭐ Enhanced Remove Item with Undo Toast
+        function removeItem(itemId) {
+            const item = document.querySelector(`.cart-item[data-id="${itemId}"]`);
+            const itemName = item.dataset.name;
+            
+            // Save deletion context for undo
+            deletedItem = item.cloneNode(true);
+            deletedItemParent = item.parentNode;
+            deletedItemNextSibling = item.nextSibling;
+            
+            // Clear any existing undo timer
+            if (undoTimer) {
+                clearTimeout(undoTimer);
+            }
+            
+            // Apply removing animation
+            item.classList.add('removing');
+            
+            setTimeout(() => {
+                item.remove();
+                calculateTotal();
+                checkEmpty();
+                
+                // Show Undo Toast
+                showUndoToast(itemName);
+                
+                // Set timer to permanently delete after 3 seconds
+                undoTimer = setTimeout(() => {
+                    deletedItem = null;
+                    deletedItemParent = null;
+                    deletedItemNextSibling = null;
+                    hideUndoToast();
+                }, 3000);
+            }, 300);
+        }
+
+        // ⭐ Show Undo Toast
+        function showUndoToast(itemName) {
+            const toast = document.getElementById('undoToast');
+            const message = document.getElementById('toastMessage');
+            
+            message.textContent = `${itemName} deleted.`;
+            toast.classList.remove('hidden', 'toast-exit');
+            toast.classList.add('toast-enter');
+        }
+
+        // ⭐ Hide Undo Toast
+        function hideUndoToast() {
+            const toast = document.getElementById('undoToast');
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 300);
+        }
+
+        // ⭐ Undo Delete Function
+        function undoDelete() {
+            if (!deletedItem || !deletedItemParent) return;
+            
+            // Clear the permanent delete timer
+            if (undoTimer) {
+                clearTimeout(undoTimer);
+                undoTimer = null;
+            }
+            
+            // Restore the item to its original position
+            if (deletedItemNextSibling) {
+                deletedItemParent.insertBefore(deletedItem, deletedItemNextSibling);
+            } else {
+                deletedItemParent.appendChild(deletedItem);
+            }
+            
+            // Re-attach event listeners (since we cloned the node)
+            const itemId = deletedItem.dataset.id;
+            deletedItem.querySelector('.item-delete button').onclick = () => removeItem(itemId);
+            deletedItem.querySelectorAll('.qty-btn').forEach((btn, index) => {
+                if (index === 0) {
+                    btn.onclick = () => updateQuantity(itemId, -1);
+                } else {
+                    btn.onclick = () => updateQuantity(itemId, 1);
+                }
+            });
+            
+            // Reset state
+            deletedItem = null;
+            deletedItemParent = null;
+            deletedItemNextSibling = null;
+            
+            // Recalculate and hide toast
+            calculateTotal();
+            checkEmpty();
+            hideUndoToast();
+        }
+
+        // ⭐ Clear Cart with Confirmation (Safety First)
+        function clearCart() {
+            if (!confirm('정말로 장바구니를 모두 비우시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) return;
+            
+            const items = document.querySelectorAll('.cart-item');
+            items.forEach(item => item.remove());
+            
+            // Clear undo state
+            deletedItem = null;
+            deletedItemParent = null;
+            deletedItemNextSibling = null;
+            if (undoTimer) {
+                clearTimeout(undoTimer);
+                undoTimer = null;
+            }
+            hideUndoToast();
+            
+            checkEmpty();
+        }
+
+        function calculateTotal() {
+            let subtotal = 0;
+            const items = document.querySelectorAll('.cart-item');
+            
+            items.forEach(item => {
+                const price = parseInt(item.dataset.price);
+                const qty = parseInt(item.dataset.qty || item.querySelector('.qty-value').textContent);
+                subtotal += price * qty;
+            });
+            
+            const discount = 500;
+            const total = subtotal - discount;
+            
+            // Update displays
+            document.getElementById('subtotal').textContent = subtotal.toLocaleString() + '원';
+            document.getElementById('discount').textContent = '-' + discount.toLocaleString() + '원';
+            document.getElementById('total').textContent = total.toLocaleString() + '원';
+            document.getElementById('checkoutBtn').textContent = total.toLocaleString() + '원 결제하기';
+            document.getElementById('mobileCheckoutBtn').textContent = total.toLocaleString() + '원 결제하기';
+        }
+
+        function checkEmpty() {
+            const items = document.querySelectorAll('.cart-item');
+            const cartContainer = document.getElementById('cartContainer');
+            const emptyState = document.getElementById('emptyState');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            const mobileCheckoutBtn = document.getElementById('mobileCheckoutBtn');
+            
+            if (items.length === 0) {
+                cartContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                checkoutBtn.disabled = true;
+                checkoutBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                checkoutBtn.classList.remove('bg-gray-900', 'hover:bg-gray-700');
+                checkoutBtn.textContent = '장바구니가 비어있습니다';
+                mobileCheckoutBtn.disabled = true;
+                mobileCheckoutBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                mobileCheckoutBtn.classList.remove('bg-gray-900', 'hover:bg-gray-700');
+                mobileCheckoutBtn.textContent = '장바구니가 비어있습니다';
+            } else {
+                cartContainer.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+                checkoutBtn.disabled = false;
+                checkoutBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                checkoutBtn.classList.add('bg-gray-900', 'hover:bg-gray-700');
+                mobileCheckoutBtn.disabled = false;
+                mobileCheckoutBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                mobileCheckoutBtn.classList.add('bg-gray-900', 'hover:bg-gray-700');
+            }
+        }
+
+        function checkout() {
+            const total = document.getElementById('total').textContent;
+            alert(`${total} 결제를 진행합니다.\n(C-07 결제 화면으로 이동)`);
+            // window.location.href = 'P1-05-A.html';
+        }
+    </script>
+</body>
+</html>

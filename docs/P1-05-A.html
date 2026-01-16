@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-07: 주문하기 (One-Page Checkout) - Order Zero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Phone Input Shake Animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        /* Smooth Accordion Animation */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .accordion-content.expanded {
+            max-height: 2000px;
+        }
+
+        /* Chip Active State */
+        .chip {
+            transition: all 0.2s;
+        }
+
+        .chip.active {
+            background: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
+
+        /* Spinner Animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.6s linear infinite;
+        }
+
+        /* ⭐ Pulse Animation (One-time) */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse-once {
+            animation: pulse 0.5s ease-out;
+        }
+
+        /* Wireframe container */
+        .wireframe-container {
+            max-width: 375px;
+            margin: 0 auto;
+            border: 2px solid #333;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        @media (min-width: 768px) {
+            .wireframe-container {
+                max-width: 1200px;
+                border: none;
+                box-shadow: none;
+            }
+        }
+
+        /* Desktop sticky sidebar */
+        @media (min-width: 768px) {
+            .sticky-sidebar {
+                position: sticky;
+                top: 6rem;
+                max-height: calc(100vh - 8rem);
+            }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a73e8',
+                        accent: '#ff6b35',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Screen Label -->
+    <div class="text-center py-4 text-sm text-gray-600 font-semibold">
+        C-07: 주문하기 (Responsive + Notification Checkbox) ✨
+    </div>
+
+    <!-- Main Container -->
+    <div class="wireframe-container bg-white min-h-screen">
+        <!-- Header -->
+        <header class="sticky top-0 z-10 bg-white border-b border-gray-300 px-4 h-14 flex items-center justify-between">
+            <button onclick="window.location.href='c06.html'" class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
+                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <h1 class="text-base font-semibold text-gray-900">주문 확인</h1>
+            <div class="w-6"></div>
+        </header>
+
+        <!-- Store Info -->
+        <div class="bg-blue-50 border-b border-blue-200 px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900">카페 블루문</h2>
+                    <p class="text-xs text-gray-600">서울시 강남구 테헤란로 123</p>
+                </div>
+                <span class="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-full">
+                    🛍️ 픽업
+                </span>
+            </div>
+        </div>
+
+        <!-- Main Content: 2-Column Grid on Desktop -->
+        <div class="px-4 py-6 pb-24 md:pb-8 md:grid md:grid-cols-12 md:gap-8">
+            <!-- Left Column (Mobile: full width, Desktop: 8 cols) -->
+            <div class="md:col-span-8 space-y-6 mb-6 md:mb-0">
+                <!-- ⭐ 1. Phone Number Section -->
+                <section class="bg-white border-2 border-gray-200 rounded-xl p-4">
+                    <label class="block">
+                        <span class="text-base font-bold text-gray-900">연락처 <span class="text-red-500">*</span></span>
+                        <span class="text-xs text-gray-500 ml-2">(알림 전송용)</span>
+                    </label>
+                    
+                    <input 
+                        type="tel" 
+                        id="phoneInput"
+                        maxlength="13"
+                        placeholder="010-0000-0000"
+                        class="w-full mt-3 text-2xl tracking-widest text-center font-semibold border-2 border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition"
+                    />
+                    
+                    <p id="phoneError" class="hidden text-sm text-red-500 mt-2">
+                        ⚠️ 올바른 전화번호를 입력해주세요
+                    </p>
+
+                    <!-- ⭐ Notification Checkbox -->
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input 
+                                type="checkbox" 
+                                id="notificationCheck"
+                                checked
+                                class="mt-1 w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
+                            />
+                            <div class="flex-1">
+                                <span class="text-sm font-medium text-gray-900 group-hover:text-primary transition">
+                                    카카오톡/문자로 알림 받기
+                                </span>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    제조 완료 시 카카오톡으로 알림을 보내드립니다. 카톡이 없으면 문자로 전송됩니다.
+                                </p>
+                            </div>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- ⭐ 2. Request Section (Smart Chips) -->
+                <section class="bg-white border border-gray-200 rounded-xl p-4">
+                    <h3 class="text-sm font-bold text-gray-900 mb-3">
+                        📝 요청사항 <span class="text-xs text-gray-500 font-normal">(선택)</span>
+                    </h3>
+
+                    <!-- Quick Chips -->
+                    <div class="flex gap-2 overflow-x-auto pb-2 mb-3" id="chipContainer">
+                        <button onclick="toggleChip(this, '얼음 적게 주세요')" class="chip px-3 py-2 text-xs font-medium border-2 border-gray-300 rounded-full whitespace-nowrap hover:border-gray-400">
+                            🧊 얼음 적게
+                        </button>
+                        <button onclick="toggleChip(this, '포장 부탁드려요')" class="chip px-3 py-2 text-xs font-medium border-2 border-gray-300 rounded-full whitespace-nowrap hover:border-gray-400">
+                            🥡 포장
+                        </button>
+                        <button onclick="toggleChip(this, '리뷰 남길게요!')" class="chip px-3 py-2 text-xs font-medium border-2 border-gray-300 rounded-full whitespace-nowrap hover:border-gray-400">
+                            ⭐ 리뷰 약속
+                        </button>
+                        <button onclick="toggleChip(this, '빨대는 빼주세요')" class="chip px-3 py-2 text-xs font-medium border-2 border-gray-300 rounded-full whitespace-nowrap hover:border-gray-400">
+                            🥤 빨대 X
+                        </button>
+                    </div>
+
+                    <!-- Textarea -->
+                    <textarea 
+                        id="requestText"
+                        maxlength="50"
+                        placeholder="직접 입력 (최대 50자)"
+                        class="w-full h-20 text-sm border-2 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-primary transition resize-none"
+                    ></textarea>
+                    <p class="text-xs text-gray-500 text-right mt-1">
+                        <span id="charCount">0</span>/50
+                    </p>
+                </section>
+
+                <!-- ⭐ 3. Payment Method (Read-Only) -->
+                <section class="bg-white border border-gray-200 rounded-xl p-4">
+                    <h3 class="text-sm font-bold text-gray-900 mb-3">💳 결제 수단</h3>
+                    
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border-2 border-gray-200">
+                        <div class="w-5 h-5 border-2 border-primary rounded-full flex items-center justify-center flex-shrink-0">
+                            <div class="w-2.5 h-2.5 bg-primary rounded-full"></div>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-900">매장에서 결제</p>
+                            <p class="text-xs text-gray-500">카드/현금/삼성페이 모두 가능</p>
+                        </div>
+                        <div class="text-2xl">💳</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Receipt-Style Card (Mobile: full width, Desktop: 4 cols + sticky) -->
+            <div class="md:col-span-4">
+                <div class="sticky-sidebar md:border md:border-gray-200 md:rounded-xl md:shadow-lg md:bg-white md:p-6">
+                    <!-- ⭐ Order Summary (Accordion on Mobile, Always Expanded on Desktop) -->
+                    <section class="bg-white border border-gray-200 rounded-xl overflow-hidden md:border-0 md:rounded-none md:p-0">
+                        <button 
+                            onclick="toggleAccordion()"
+                            class="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 transition md:hidden"
+                        >
+                            <div class="text-left">
+                                <h3 class="text-sm font-bold text-gray-900">주문 내역</h3>
+                                <p class="text-xs text-gray-500">아메리카노 외 2개</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg font-bold text-gray-900">20,000원</span>
+                                <svg id="accordionIcon" class="w-5 h-5 text-gray-600 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                </svg>
+                            </div>
+                        </button>
+
+                        <!-- Desktop Header -->
+                        <div class="hidden md:block mb-4">
+                            <h3 class="text-base font-bold text-gray-900">주문 내역</h3>
+                        </div>
+
+                        <div id="accordionContent" class="accordion-content expanded">
+                            <div class="px-4 pb-4 pt-2 border-t border-gray-100 space-y-3 md:px-0 md:border-t-0 md:pt-0">
+                                <!-- Item 1 -->
+                                <div class="flex gap-3">
+                                    <div class="w-12 h-12 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center text-xs text-gray-400">
+                                        IMG
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-semibold text-gray-900">아메리카노</h4>
+                                        <p class="text-xs text-gray-500">HOT · M · 샷 추가</p>
+                                        <p class="text-xs text-gray-500 mt-1">수량: 2개</p>
+                                    </div>
+                                    <div class="text-sm font-semibold text-gray-900">
+                                        11,000원
+                                    </div>
+                                </div>
+
+                                <!-- Item 2 -->
+                                <div class="flex gap-3">
+                                    <div class="w-12 h-12 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center text-xs text-gray-400">
+                                        IMG
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-semibold text-gray-900">카페라떼</h4>
+                                        <p class="text-xs text-gray-500">ICED · L</p>
+                                        <p class="text-xs text-gray-500 mt-1">수량: 1개</p>
+                                    </div>
+                                    <div class="text-sm font-semibold text-gray-900">
+                                        6,000원
+                                    </div>
+                                </div>
+
+                                <!-- Item 3 -->
+                                <div class="flex gap-3">
+                                    <div class="w-12 h-12 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center text-xs text-gray-400">
+                                        IMG
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-semibold text-gray-900">크로와상</h4>
+                                        <p class="text-xs text-gray-500">-</p>
+                                        <p class="text-xs text-gray-500 mt-1">수량: 1개</p>
+                                    </div>
+                                    <div class="text-sm font-semibold text-gray-900">
+                                        3,500원
+                                    </div>
+                                </div>
+
+                                <!-- Price Summary -->
+                                <div class="pt-3 border-t border-gray-200 space-y-2">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">주문금액</span>
+                                        <span class="text-gray-900">20,500원</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">할인</span>
+                                        <span class="text-accent">-500원</span>
+                                    </div>
+                                    <div class="flex justify-between text-base font-bold pt-2 border-t border-gray-200">
+                                        <span class="text-gray-900">총 결제금액</span>
+                                        <span class="text-primary text-xl">20,000원</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Desktop Checkout Button (Hidden on Mobile) -->
+                    <div class="hidden md:block mt-6">
+                        <button 
+                            id="desktopCheckoutBtn"
+                            onclick="handleCheckout()"
+                            disabled
+                            class="w-full py-4 bg-gray-400 text-white rounded-lg text-base font-semibold transition disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            <svg id="desktopSpinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span id="desktopBtnText">연락처를 입력해주세요</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⭐ Mobile Sticky Footer (Hidden on Desktop) -->
+        <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 p-4 z-10">
+            <div class="max-w-[375px] mx-auto">
+                <button 
+                    id="mobileCheckoutBtn"
+                    onclick="handleCheckout()"
+                    disabled
+                    class="w-full py-4 bg-gray-400 text-white rounded-lg text-base font-semibold transition disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                    <svg id="mobileSpinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span id="mobileBtnText">연락처를 입력해주세요</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⭐ Phone Number Auto-Format
+        const phoneInput = document.getElementById('phoneInput');
+        const phoneError = document.getElementById('phoneError');
+        const mobileCheckoutBtn = document.getElementById('mobileCheckoutBtn');
+        const desktopCheckoutBtn = document.getElementById('desktopCheckoutBtn');
+
+        phoneInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/[^0-9]/g, '');
+            
+            if (value.length > 11) {
+                value = value.slice(0, 11);
+            }
+            
+            if (value.length > 3 && value.length <= 7) {
+                value = value.slice(0, 3) + '-' + value.slice(3);
+            } else if (value.length > 7) {
+                value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+            }
+            
+            e.target.value = value;
+            updateButtonState(value);
+        });
+
+        phoneInput.addEventListener('blur', (e) => {
+            const value = e.target.value;
+            if (value.length > 0 && value.length < 13) {
+                phoneError.classList.remove('hidden');
+                phoneInput.classList.add('border-red-500', 'shake');
+                setTimeout(() => {
+                    phoneInput.classList.remove('shake');
+                }, 500);
+            } else {
+                phoneError.classList.add('hidden');
+                phoneInput.classList.remove('border-red-500');
+            }
+        });
+
+        function updateButtonState(phoneValue) {
+            const isValid = phoneValue.length === 13;
+            
+            // Update both buttons
+            [mobileCheckoutBtn, desktopCheckoutBtn].forEach(btn => {
+                if (isValid) {
+                    // ⭐ Enable with Brand Primary Color
+                    btn.disabled = false;
+                    btn.classList.remove('bg-gray-400');
+                    btn.classList.add('bg-primary', 'hover:bg-blue-700');
+
+                    // ⭐ One-time Pulse Animation
+                    btn.classList.add('pulse-once');
+                    setTimeout(() => {
+                        btn.classList.remove('pulse-once');
+                    }, 500);
+                } else {
+                    // Disable with Gray
+                    btn.disabled = true;
+                    btn.classList.remove('bg-primary', 'hover:bg-blue-700');
+                    btn.classList.add('bg-gray-400');
+                }
+            });
+
+            // Update button text
+            const btnText = isValid ? '20,000원 주문하기' : '연락처를 입력해주세요';
+            document.getElementById('mobileBtnText').textContent = btnText;
+            document.getElementById('desktopBtnText').textContent = btnText;
+        }
+
+        // ⭐ Accordion Toggle (Mobile Only)
+        function toggleAccordion() {
+            const content = document.getElementById('accordionContent');
+            const icon = document.getElementById('accordionIcon');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('expanded');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // ⭐ Chip Toggle
+        function toggleChip(element, text) {
+            const textarea = document.getElementById('requestText');
+            
+            if (element.classList.contains('active')) {
+                element.classList.remove('active');
+                textarea.value = textarea.value.replace(text, '').replace(/, ,/g, ',').replace(/^, |, $/g, '').trim();
+            } else {
+                element.classList.add('active');
+                if (textarea.value) {
+                    textarea.value += ', ' + text;
+                } else {
+                    textarea.value = text;
+                }
+            }
+            
+            updateCharCount();
+        }
+
+        // ⭐ Character Count
+        const requestText = document.getElementById('requestText');
+        const charCount = document.getElementById('charCount');
+
+        requestText.addEventListener('input', updateCharCount);
+
+        function updateCharCount() {
+            const count = requestText.value.length;
+            charCount.textContent = count;
+            
+            if (count >= 50) {
+                charCount.classList.add('text-red-500');
+            } else {
+                charCount.classList.remove('text-red-500');
+            }
+        }
+
+        // ⭐ Checkout Handler
+        function handleCheckout() {
+            const phone = phoneInput.value;
+            const request = requestText.value;
+            const notificationEnabled = document.getElementById('notificationCheck').checked;
+            
+            // ⭐ Validation with Enhanced UX
+            if (phone.length !== 13) {
+                // 1. Scroll to Phone Input (Smooth)
+                phoneInput.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+
+                // 2. Focus Input
+                setTimeout(() => {
+                    phoneInput.focus();
+                }, 300);
+
+                // 3. Vibrate (Mobile Haptic Feedback)
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+
+                // 4. Shake Animation + Red Border
+                phoneInput.classList.add('shake', 'border-red-500');
+                phoneError.classList.remove('hidden');
+
+                setTimeout(() => {
+                    phoneInput.classList.remove('shake');
+                }, 500);
+
+                return;
+            }
+
+            // ⭐ Show Loading State
+            const mobileBtnText = document.getElementById('mobileBtnText');
+            const desktopBtnText = document.getElementById('desktopBtnText');
+            const mobileSpinner = document.getElementById('mobileSpinner');
+            const desktopSpinner = document.getElementById('desktopSpinner');
+
+            // Change text to "Processing..."
+            mobileBtnText.textContent = 'Processing...';
+            desktopBtnText.textContent = 'Processing...';
+
+            // Show spinners
+            mobileSpinner.classList.remove('hidden');
+            desktopSpinner.classList.remove('hidden');
+
+            // Disable buttons
+            mobileCheckoutBtn.disabled = true;
+            desktopCheckoutBtn.disabled = true;
+
+            // ⭐ Simulate 1.5s Processing
+            setTimeout(() => {
+                const notificationMsg = notificationEnabled
+                    ? '\n\n📱 카카오톡/문자로 제조 완료 알림을 보내드릴게요!'
+                    : '\n\n🔕 알림을 받지 않으시므로 직접 확인해주세요.';
+
+                alert(`주문이 완료되었습니다! 🎉\n\n연락처: ${phone}\n요청사항: ${request || '없음'}${notificationMsg}`);
+
+                // Reset for demo (or redirect to success page)
+                mobileBtnText.textContent = '20,000원 주문하기';
+                desktopBtnText.textContent = '20,000원 주문하기';
+                mobileSpinner.classList.add('hidden');
+                desktopSpinner.classList.add('hidden');
+                mobileCheckoutBtn.disabled = false;
+                desktopCheckoutBtn.disabled = false;
+
+                // window.location.href = 'P1-06-B.html'; // Success page
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

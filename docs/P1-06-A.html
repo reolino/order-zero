@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-12: 주문 조회 - Order Zero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        'primary-dark': '#1d4ed8',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Shake Animation for Error */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+            20%, 40%, 60%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Fade In Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        /* Input Caret Color */
+        input[type="tel"] {
+            caret-color: #2563eb;
+        }
+
+        /* Loading Spinner */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<!-- Main Layout -->
+<div class="min-h-screen flex flex-col lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:p-8">
+    
+    <!-- Main Card -->
+    <div class="w-full sm:max-w-lg lg:max-w-md xl:max-w-lg mx-auto bg-white sm:my-4 sm:rounded-2xl sm:shadow-xl lg:my-0 min-h-screen sm:min-h-0 flex flex-col">
+        
+        <!-- ========================================== -->
+        <!-- Header -->
+        <!-- ========================================== -->
+        <header class="h-14 flex items-center px-4 bg-white border-b border-gray-100 sticky top-0 z-10">
+            <a href="c01.html" class="w-10 h-10 -ml-2 rounded-full hover:bg-gray-100 active:bg-gray-200 flex items-center justify-center transition-colors">
+                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="flex-1 text-center text-lg font-semibold text-gray-900 -ml-10">주문 조회</h1>
+        </header>
+
+        <!-- ========================================== -->
+        <!-- Main Content (Vertically Centered) -->
+        <!-- ========================================== -->
+        <main class="flex-1 flex flex-col justify-center px-6 py-8 lg:py-12">
+            
+            <!-- Icon -->
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-blue-50 rounded-full mb-4">
+                    <svg class="w-8 h-8 sm:w-10 sm:h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Headline -->
+            <div class="text-center mb-8">
+                <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 whitespace-pre-line leading-relaxed">
+                    주문 시 입력한
+                    <span class="text-primary">휴대폰 번호</span>를
+                    입력해주세요
+                </h2>
+                <p class="text-sm sm:text-base text-gray-500 mt-3">
+                    주문 내역을 조회할 수 있어요
+                </p>
+            </div>
+
+            <!-- Phone Input -->
+            <div>
+                <div id="inputWrapper" class="relative">
+                    <input
+                        type="tel"
+                        id="phoneInput"
+                        placeholder="010-1234-5678"
+                        maxlength="13"
+                        autocomplete="tel"
+                        autofocus
+                        class="w-full text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-gray-900 
+                               bg-gray-50 border-2 border-gray-200 rounded-2xl
+                               py-5 sm:py-6 px-4
+                               placeholder:text-gray-300 placeholder:font-normal
+                               focus:outline-none focus:border-primary focus:bg-white focus:ring-4 focus:ring-blue-50
+                               transition-all duration-200
+                               tracking-widest"
+                    >
+                    <!-- Clear Button -->
+                    <button 
+                        id="clearBtn"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gray-300 hover:bg-gray-400 
+                               flex items-center justify-center transition-colors hidden"
+                        type="button"
+                    >
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Validation Message Area (Hidden by default) -->
+                <div id="errorSection" class="hidden mt-4 animate-fade-in">
+                    <p id="errorText" class="text-center text-sm text-red-500 font-medium mb-4">
+                        최근 주문 내역이 없습니다.
+                    </p>
+                    <!-- Conversion Opportunity Button -->
+                    <a 
+                        href="P1-02.html"
+                        class="flex items-center justify-center gap-2 w-full py-3 border-2 border-primary text-primary 
+                               font-semibold rounded-xl hover:bg-blue-50 active:bg-blue-100 transition-colors"
+                    >
+                        <span>☕</span>
+                        <span>지금 주문하러 가기</span>
+                    </a>
+                </div>
+
+                <!-- Helper Text (Shown by default) -->
+                <p id="helperText" class="text-center text-xs sm:text-sm text-gray-400 mt-3">
+                    주문 시 입력하신 전화번호를 입력해주세요
+                </p>
+            </div>
+
+            <!-- Privacy Notice -->
+            <div class="mt-6 p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-start gap-2">
+                    <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        입력하신 전화번호는 주문 조회에만 사용됩니다.
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <!-- ========================================== -->
+        <!-- Sticky Footer -->
+        <!-- ========================================== -->
+        <footer class="sticky bottom-0 bg-white border-t border-gray-100 p-4 sm:p-6">
+            <button 
+                id="submitBtn"
+                disabled
+                class="w-full h-12 sm:h-14 lg:h-16 rounded-xl font-semibold text-base sm:text-lg
+                       bg-gray-200 text-gray-400 cursor-not-allowed
+                       transition-all duration-300
+                       disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed
+                       enabled:bg-primary enabled:text-white enabled:hover:bg-primary-dark enabled:active:scale-[0.98] enabled:shadow-lg enabled:shadow-blue-200"
+            >
+                <span id="btnText">조회하기</span>
+                <svg id="btnSpinner" class="hidden animate-spin mx-auto w-6 h-6" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </button>
+        </footer>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Desktop Side Panel (lg+) -->
+    <!-- ========================================== -->
+    <aside class="hidden lg:block w-80 xl:w-96 bg-white rounded-2xl shadow-xl p-6 xl:p-8">
+        <h2 class="text-lg xl:text-xl font-bold text-gray-900 mb-4 xl:mb-6">주문 조회 안내</h2>
+        
+        <!-- Info Items -->
+        <div class="space-y-4 xl:space-y-5">
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">1</div>
+                <div>
+                    <p class="font-medium text-gray-900 text-sm">전화번호 입력</p>
+                    <p class="text-gray-500 text-xs mt-0.5">주문 시 입력한 번호를 입력해주세요.</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">2</div>
+                <div>
+                    <p class="font-medium text-gray-900 text-sm">주문 상태 확인</p>
+                    <p class="text-gray-500 text-xs mt-0.5">접수, 제조 중, 픽업 대기 상태를 확인하세요.</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">3</div>
+                <div>
+                    <p class="font-medium text-gray-900 text-sm">픽업 완료</p>
+                    <p class="text-gray-500 text-xs mt-0.5">제조 완료 알림을 받고 카운터로 오세요.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="my-5 xl:my-6 border-gray-200">
+
+        <!-- Test Info -->
+        <div class="p-4 bg-amber-50 rounded-xl">
+            <p class="text-xs text-amber-800 font-medium mb-2">🧪 테스트 안내</p>
+            <ul class="text-xs text-amber-700 space-y-1">
+                <li>• <code class="bg-amber-100 px-1 rounded">010-0000-0000</code> → 주문 없음</li>
+                <li>• 그 외 번호 → 주문 조회 성공</li>
+            </ul>
+        </div>
+    </aside>
+</div>
+
+<script>
+    // ============================================
+    // DOM Elements
+    // ============================================
+    const phoneInput = document.getElementById('phoneInput');
+    const clearBtn = document.getElementById('clearBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const inputWrapper = document.getElementById('inputWrapper');
+    const errorSection = document.getElementById('errorSection');
+    const helperText = document.getElementById('helperText');
+
+    // ============================================
+    // Auto-focus on page load
+    // ============================================
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            phoneInput.focus();
+        }, 300);
+    });
+
+    // ============================================
+    // Auto-Format Phone Number (010-1234-5678)
+    // ============================================
+    phoneInput.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        
+        // Limit to 11 digits
+        if (value.length > 11) {
+            value = value.slice(0, 11);
+        }
+
+        // Format with hyphens
+        if (value.length <= 3) {
+            e.target.value = value;
+        } else if (value.length <= 7) {
+            e.target.value = `${value.slice(0, 3)}-${value.slice(3)}`;
+        } else {
+            e.target.value = `${value.slice(0, 3)}-${value.slice(3, 7)}-${value.slice(7)}`;
+        }
+
+        // Update UI state
+        updateUIState();
+    });
+
+    // ============================================
+    // Update UI State
+    // ============================================
+    function updateUIState() {
+        const value = phoneInput.value;
+        const isComplete = value.length === 13; // 010-1234-5678
+
+        // Toggle clear button
+        clearBtn.classList.toggle('hidden', value.length === 0);
+
+        // Toggle submit button
+        submitBtn.disabled = !isComplete;
+
+        // Hide error section when typing
+        if (value.length > 0 && !errorSection.classList.contains('hidden')) {
+            errorSection.classList.add('hidden');
+            helperText.classList.remove('hidden');
+            phoneInput.classList.remove('border-red-400', 'focus:border-red-400', 'focus:ring-red-50');
+            phoneInput.classList.add('border-gray-200', 'focus:border-primary', 'focus:ring-blue-50');
+        }
+    }
+
+    // ============================================
+    // Clear Button
+    // ============================================
+    clearBtn.addEventListener('click', () => {
+        phoneInput.value = '';
+        phoneInput.focus();
+        updateUIState();
+    });
+
+    // ============================================
+    // Submit Button Click
+    // ============================================
+    submitBtn.addEventListener('click', handleSubmit);
+    
+    // Enter key support
+    phoneInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && phoneInput.value.length === 13) {
+            handleSubmit();
+        }
+    });
+
+    function handleSubmit() {
+        const phone = phoneInput.value;
+        
+        if (phone.length !== 13) return;
+
+        // Show loading state
+        btnText.classList.add('hidden');
+        btnSpinner.classList.remove('hidden');
+        submitBtn.disabled = true;
+        phoneInput.disabled = true;
+
+        // Simulate API call
+        setTimeout(() => {
+            // ========================================
+            // Scenario B: No Order Found (Test Case)
+            // ========================================
+            if (phone === '010-0000-0000') {
+                // Reset button
+                btnText.classList.remove('hidden');
+                btnSpinner.classList.add('hidden');
+                submitBtn.disabled = false;
+                phoneInput.disabled = false;
+
+                // 📳 Haptic Feedback (모바일 진동)
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+
+                // Shake animation
+                inputWrapper.classList.add('animate-shake');
+                setTimeout(() => {
+                    inputWrapper.classList.remove('animate-shake');
+                }, 500);
+
+                // Show error state
+                phoneInput.classList.remove('border-gray-200', 'focus:border-primary', 'focus:ring-blue-50');
+                phoneInput.classList.add('border-red-400', 'focus:border-red-400', 'focus:ring-red-50');
+                
+                // Show error section with conversion button
+                errorSection.classList.remove('hidden');
+                helperText.classList.add('hidden');
+
+                // Focus back to input
+                phoneInput.focus();
+                phoneInput.select();
+            } 
+            // ========================================
+            // Scenario A: Order Found → Redirect
+            // ========================================
+            else {
+                window.location.href = 'c09.html';
+            }
+        }, 1200);
+    }
+</script>
+
+</body>
+</html>
